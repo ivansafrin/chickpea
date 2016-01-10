@@ -8,7 +8,6 @@
 typedef struct {
 	float x;
 	float y;
-	float z;
 } Vector2;
 
 typedef struct {
