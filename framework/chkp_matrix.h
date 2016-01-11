@@ -1,6 +1,13 @@
 // chickpea unframework
-// ivan safrin, 2016
-// this code is licensed under the MIT license
+// transformation matrix utilities
+// version 0.01
+//
+// This software is in the public domain. Where that dedication is not
+// recognized, you are granted a perpetual, irrevocable license to copy
+// and modify it however you want.
+//
+// People who worked on this file:
+//	Ivan Safrin
 
 #ifndef matrix_h
 #define matrix_h

@@ -1,6 +1,14 @@
 // chickpea unframework
-// ivan safrin, 2016
-// this code is licensed under the MIT license
+// platformer game engine
+// version 0.01
+//
+// This software is in the public domain. Where that dedication is not
+// recognized, you are granted a perpetual, irrevocable license to copy
+// and modify it however you want.
+//
+// People who worked on this file:
+//	Ivan Safrin
+
 
 #ifndef platformer_h
 #define platformer_h

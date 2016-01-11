@@ -1,6 +1,13 @@
 // chickpea unframework
-// ivan safrin, 2016
-// this code is licensed under the MIT license
+// OpenGL ES2 drawing utilities
+// version 0.01
+//
+// This software is in the public domain. Where that dedication is not
+// recognized, you are granted a perpetual, irrevocable license to copy
+// and modify it however you want.
+//
+// People who worked on this file:
+//	Ivan Safrin
 
 #ifndef sprite_h
 #define sprite_h
@@ -33,6 +40,7 @@ void drawSprite(GLuint spriteTexture, int positionAttribute, int texCoordAttribu
 void drawSpriteAnimation(float time, float delay, char loop, const int *frameArray, int animationSize, GLuint spriteTexture, int positionAttribute, int texCoordAttribute, int spriteCountX, int spriteCountY, float size);
 void drawText(int fontTexture, int positionAttribute, int texCoordAttribute, const char *text, float size, float spacing);
 void drawLineCircle(float size, int vertexCount, int positionAttribute);
+void drawLine(float x0, float y0, float x1, float y1,  int positionAttribute);
 void drawTexture(int texture, float width, float height, float sOffset, float tOffset, int positionAttribute, int texCoordAttribute);
 
 
@@ -324,5 +332,12 @@ void drawLineCircle(float size, int vertexCount, int positionAttribute) {
 	free(vertexData);
 }
 
+void drawLine(float x0, float y0, float x1, float y1,  int positionAttribute) {
+	float vertexData[] = {x0,y0,x1,y1};
+	glVertexAttribPointer(positionAttribute, 2, GL_FLOAT, GL_FALSE, 0, vertexData);
+	glEnableVertexAttribArray(positionAttribute);
+	glDrawArrays(GL_LINE_LOOP, 0, 2);
+	glDisableVertexAttribArray(positionAttribute);
+}
 
 #endif
