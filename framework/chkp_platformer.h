@@ -121,7 +121,7 @@ void loadTilemapFromFlare(PlatformerWorld *world, const char *fileName) {
 					int x = 0;
 					world->worldData[i][x] = atoi(pch)-1;
 					x++;
-					while(pch && x < mapWidth-1) {
+					while(pch && x < mapWidth) {
 						pch = strtok(NULL,",");
 						world->worldData[i][x] = atoi(pch)-1;
 						x++;
@@ -239,7 +239,7 @@ void initPlatformerEntity(PlatformerEntity *entity) {
 	entity->scale.x = 1.0;
 	entity->scale.y = 1.0;
 	entity->scale.z = 1.0;
-	entity->restitution = 1.0;
+	entity->restitution = 0.0;
 	entity->isStatic = 0;
 }
 
@@ -308,7 +308,7 @@ void updatePlatformerEntity(float elapsed, PlatformerWorld *world, PlatformerEnt
 		entity->velocity.y += entity->acceleration.y * elapsed;
 		entity->velocity.x += world->gravity.x * elapsed;
 		entity->velocity.y += world->gravity.y * elapsed;
-		
+
 		entity->position.y += entity->velocity.y * elapsed;
 		
 		for(int i=0; i < numCollisionEntities; i++) {
@@ -322,22 +322,34 @@ void updatePlatformerEntity(float elapsed, PlatformerWorld *world, PlatformerEnt
 					entity->position.y -= penetration + 0.0000001;
 					entity->topCollisionFlag = 1;
 				}
-				entity->velocity.y = 0.0f;
+				if(fabs(entity->velocity.y) > 0.01f) {
+					entity->velocity.y = -entity->velocity.y * entity->restitution;
+				} else {
+					entity->velocity.y = 0.0f;
+				}
 			}
 		}
 		
 
-		float adjust = checkPointForGridCollisionY(world, solidTiles, numSolidTiles, entity->position.x, entity->position.y - entity->size.y * 0.5);
+		float adjust = checkPointForGridCollisionY(world, solidTiles, numSolidTiles, entity->position.x, entity->position.y - entity->size.y * 0.5 * fabs(entity->scale.y));
 		if(adjust != 0.0f) {
 			entity->position.y += adjust;
-			entity->velocity.y = 0.0f;
+			if(fabs(entity->velocity.y) > 1.0) {
+				entity->velocity.y = -entity->velocity.y * entity->restitution;
+			} else {
+				entity->velocity.y = 0.0f;
+			}
 			entity->bottomCollisionFlag = 1;
 		}
 		
-		adjust = checkPointForGridCollisionY(world, solidTiles, numSolidTiles, entity->position.x, entity->position.y + entity->size.y * 0.5);
+		adjust = checkPointForGridCollisionY(world, solidTiles, numSolidTiles, entity->position.x, entity->position.y + entity->size.y * 0.5 * fabs(entity->scale.y));
 		if(adjust != 0.0f) {
 			entity->position.y += adjust - world->tileSize;
-			entity->velocity.y = 0.0f;
+			if(fabs(entity->velocity.y) > 0.01f) {
+				entity->velocity.y = -entity->velocity.y * entity->restitution;
+			} else {
+				entity->velocity.y = 0.0f;
+			}
 			entity->topCollisionFlag = 1;
 		}
 		
@@ -353,27 +365,27 @@ void updatePlatformerEntity(float elapsed, PlatformerWorld *world, PlatformerEnt
 					entity->position.x -= penetration + 0.000001;
 					entity->rightCollisionFlag = 1;
 				}
-				entity->velocity.x = 0.0f;
+				entity->velocity.x = -entity->velocity.x * entity->restitution;
 			}
 		}
 		
 		
-		adjust = checkPointForGridCollisionX(world, solidTiles, numSolidTiles, entity->position.x - entity->size.x * 0.5, entity->position.y);
+		adjust = checkPointForGridCollisionX(world, solidTiles, numSolidTiles, entity->position.x - entity->size.x * 0.5 * fabs(entity->scale.x), entity->position.y);
 		if(adjust != 0.0f) {
 			entity->position.x += adjust;
-			entity->velocity.x = 0.0f;
+			entity->velocity.x = -entity->velocity.x * entity->restitution;
 			entity->leftCollisionFlag = 1;
 		}
 		
-		adjust = checkPointForGridCollisionX(world, solidTiles, numSolidTiles, entity->position.x + entity->size.x * 0.5, entity->position.y);
+		adjust = checkPointForGridCollisionX(world, solidTiles, numSolidTiles, entity->position.x + entity->size.x * 0.5 * fabs(entity->scale.x), entity->position.y);
 		if(adjust != 0.0f) {
 			entity->position.x += adjust - world->tileSize;
-			entity->velocity.x = 0.0f;
+			entity->velocity.x = -entity->velocity.x * entity->restitution;
 			entity->rightCollisionFlag = 1;
 		}
 		
 	}
-	
+
 	matrixSetIdentity(entity->modelMatrix);
 	matrixTranslate(entity->modelMatrix, entity->position.x, entity->position.y, entity->position.z);	
 	matrixScale(entity->modelMatrix, entity->scale.x, entity->scale.y, entity->scale.z);
