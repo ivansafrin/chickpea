@@ -23,7 +23,9 @@ float easeOut(float from, float to, float time);
 float easeInOut(float from, float to, float time);
 float easeOutElastic(float from, float to, float time);
 
-// IMPLEMENTATION
+#endif
+
+#ifdef CHICKPEA_UTIL_IMPLEMENTATION
 
 float lerp(float v0, float v1, float t) {
 	return (1.0-t)*v0 + t*v1;

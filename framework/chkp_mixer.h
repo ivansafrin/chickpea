@@ -49,8 +49,9 @@ uint32_t mixerLoadSoundWAV(Mixer *mixer, const char *fileName);
 void mixerMixIntoBuffer(Mixer *mixer, int16_t *buffer, unsigned int numSamples);
 void mixerPlaySound(Mixer *mixer, uint32_t soundID, char restart, char looped);
 
-// IMPLEMENTATION
+#endif
 
+#ifdef CHICKPEA_MIXER_IMPLEMENTATION
 
 void mixerPlaySound(Mixer *mixer, uint32_t soundID, char restart, char looped) {
 	MixerSound *sound = mixer->sounds;

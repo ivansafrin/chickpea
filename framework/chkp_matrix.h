@@ -29,6 +29,9 @@ void matrixPitch(float *m, float pitch);
 void matrixSetYaw(float *m, float yaw);
 void matrixYaw(float *m, float yaw);
 
+#endif
+
+#ifdef CHICKPEA_MATRIX_IMPLEMENTATION
 
 void matrixMultiply(float *m, float *m2, float *target) {
 	float mout[16];

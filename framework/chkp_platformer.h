@@ -13,9 +13,9 @@
 #ifndef platformer_h
 #define platformer_h
 
-#include "vector.h"
-#include "util.h"
-#include "matrix.h"
+#include "chkp_vector.h"
+#include "chkp_util.h"
+#include "chkp_matrix.h"
 #include <math.h>
 
 #include <stdlib.h>
@@ -24,12 +24,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
-
-#ifdef _WINDOWS
-#include <GL/glew.h>
-#endif
-#include <SDL.h>
-#include <SDL_opengl.h>
 
 typedef struct {
 	int x;
@@ -80,7 +74,9 @@ void freeTilemap(PlatformerWorld *world);
 void renderTilemap(PlatformerWorld *world, int tileTexture, int positionAttribute, int texCoordAttribute);
 int boxBoxCollisionTest(Vector3 *position1, Vector3 *size1, Vector3 *position2, Vector3 *size2);
 
-// -- IMPLEMENTATION
+#endif
+
+#ifdef CHICKPEA_PLATFORMER_IMPLEMENTATION
 
 void loadTilemapFromFlare(PlatformerWorld *world, const char *fileName) {
 	FILE * fp;

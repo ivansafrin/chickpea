@@ -12,12 +12,6 @@
 #ifndef sprite_h
 #define sprite_h
 
-#ifdef _WINDOWS
-#include <GL/glew.h>
-#endif
-#include <SDL.h>
-#include <SDL_opengl.h>
-
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
 
@@ -43,6 +37,9 @@ void drawLineCircle(float size, int vertexCount, int positionAttribute);
 void drawLine(float x0, float y0, float x1, float y1,  int positionAttribute);
 void drawTexture(int texture, float width, float height, float sOffset, float tOffset, int positionAttribute, int texCoordAttribute);
 
+#endif
+
+#ifdef CHICKPEA_DRAW_IMPLEMENTATION
 
 STBTT_DEF void getSTBTTBakedQuad(stbtt_bakedchar *chardata, int pw, int ph, int char_index, float *xpos, float *ypos, stbtt_aligned_quad *q, int opengl_fillrule)
 {
