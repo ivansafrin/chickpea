@@ -33,9 +33,16 @@ GLuint createProgram(const char *vertexShaderFile, const char *fragmentShaderFil
 void drawSprite(GLuint spriteTexture, int positionAttribute, int texCoordAttribute, int index, int spriteCountX, int spriteCountY, float size);
 void drawSpriteAnimation(float time, float delay, char loop, const int *frameArray, int animationSize, GLuint spriteTexture, int positionAttribute, int texCoordAttribute, int spriteCountX, int spriteCountY, float size);
 void drawText(int fontTexture, int positionAttribute, int texCoordAttribute, const char *text, float size, float spacing);
+
 void drawLineCircle(float size, int vertexCount, int positionAttribute);
+
+void drawLineRect(float width, float height, int positionAttribute);
+void drawLineRectAt(float x, float y, float width, float height, int positionAttribute);
+
 void drawLine(float x0, float y0, float x1, float y1,  int positionAttribute);
+
 void drawTexture(int texture, float width, float height, float sOffset, float tOffset, int positionAttribute, int texCoordAttribute);
+void drawTextureAt(int texture, float x, float y, float width, float height, float sOffset, float tOffset, int positionAttribute, int texCoordAttribute);
 
 #endif
 
@@ -206,7 +213,7 @@ GLuint createProgram(const char *vertexShaderFile, const char *fragmentShaderFil
 	return programID;
 }
 
-void drawTexture(int texture, float width, float height, float sOffset, float tOffset, int positionAttribute, int texCoordAttribute) {
+void drawTextureAt(int texture, float x, float y, float width, float height, float sOffset, float tOffset, int positionAttribute, int texCoordAttribute) {
 	glBindTexture(GL_TEXTURE_2D, texture);
 
 	float texCoords[] = {
@@ -217,8 +224,7 @@ void drawTexture(int texture, float width, float height, float sOffset, float tO
 		sOffset, tOffset+1.0,
 		sOffset+1.0, tOffset+1.0
 	};
-
-	float vertices[] = {-0.5f * width, -0.5f  * height, 0.5f  * width, 0.5f  * height, -0.5f  * width, 0.5f  * height, 0.5f  * width, 0.5f  * height,  -0.5f  * width, -0.5f  * height, 0.5f  * width, -0.5f  * height};
+	float vertices[] = {x-0.5f * width, y-0.5f  * height, x+0.5f  * width, y+0.5f  * height, x-0.5f  * width, y+0.5f  * height, x+0.5f  * width, y+0.5f  * height, x -0.5f  * width, y-0.5f  * height, x+0.5f  * width, y-0.5f  * height};
 	glVertexAttribPointer(positionAttribute, 2, GL_FLOAT, GL_FALSE, 0, vertices);
 	glEnableVertexAttribArray(positionAttribute);
 	
@@ -229,6 +235,10 @@ void drawTexture(int texture, float width, float height, float sOffset, float tO
 	
 	glDisableVertexAttribArray(positionAttribute);
 	glDisableVertexAttribArray(texCoordAttribute);
+}
+
+void drawTexture(int texture, float width, float height, float sOffset, float tOffset, int positionAttribute, int texCoordAttribute) {
+	drawTextureAt(texture, 0.0, 0.0, width, height,  sOffset, tOffset, positionAttribute, texCoordAttribute);
 }
 
 void drawSprite(GLuint spriteTexture, int positionAttribute, int texCoordAttribute, int index, int spriteCountX, int spriteCountY, float size) {
@@ -313,6 +323,18 @@ void drawText(int fontTexture, int positionAttribute, int texCoordAttribute, con
 	
 	free(vertexData);
 	free(texCoordData);
+}
+
+void drawLineRect(float width, float height, int positionAttribute) {
+	drawLineRectAt(0.0, 0.0, width, height, positionAttribute);
+}
+
+void drawLineRectAt(float x, float y, float width, float height, int positionAttribute) {
+	float vertexData[] = {x-width*0.5,y-height*0.5,x+width*0.5,y-height*0.5, x+width*0.5, y+height*0.5, x-width*0.5, y+height*0.5};
+	glVertexAttribPointer(positionAttribute, 2, GL_FLOAT, GL_FALSE, 0, vertexData);
+	glEnableVertexAttribArray(positionAttribute);
+	glDrawArrays(GL_LINE_LOOP, 0, 4);
+	glDisableVertexAttribArray(positionAttribute);
 }
 
 void drawLineCircle(float size, int vertexCount, int positionAttribute) {
