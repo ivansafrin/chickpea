@@ -61,6 +61,7 @@ void resetParticle(ParticleSystem *system, Particle *particle);
 void resetParticle(ParticleSystem *system, Particle *particle) {
 	particle->lifetime = fmod(particle->lifetime, system->particleLifetime);;
 	particle->size = system->particleSizeStart;
+	memcpy(particle->color, system->particleColorStart, sizeof(float) * 4);
 	particle->sizeDeviation = ((float)rand()/(float)RAND_MAX) * system->particleSizeDeviation;
 	for(int i=0; i < 3; i++) {
 		particle->velocity[i] = (system->emitterDirection[i] - (system->emitterDirectionDeviation[i]*0.5f)+system->emitterDirectionDeviation[i]*((float)rand()/(float)RAND_MAX))* (system->emitterVelocity-(system->emitterVelocityDeviation*0.5f)+system->emitterVelocityDeviation*((float)rand()/(float)RAND_MAX));
