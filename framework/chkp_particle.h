@@ -1,3 +1,13 @@
+// chickpea unframework
+// simple particle system
+// version 0.01
+//
+// This software is in the public domain. Where that dedication is not
+// recognized, you are granted a perpetual, irrevocable license to copy
+// and modify it however you want.
+//
+// People who worked on this file:
+//	Ivan Safrin
 
 #ifndef chkp_particle_h
 #define chkp_particle_h
@@ -9,6 +19,7 @@ typedef struct {
 	float velocity[3];
 	float color[4];
 	float size;
+	float sizeDeviation;
 	float lifetime;
 } Particle;
 
@@ -23,9 +34,12 @@ typedef struct {
 
 	float particleLifetime;
 
+	float particleSizeDeviation;
 	float particleSizeStart;
 	float particleSizeEnd;
 	
+	float friction;
+
 	float particleColorStart[4];
 	float particleColorEnd[4];
 
@@ -33,9 +47,10 @@ typedef struct {
 	uint32_t particleCount;
 } ParticleSystem;
 
-void initParticleSystem(ParticleSystem *system, uint32_t count);
+void initParticleSystem(ParticleSystem *system, uint32_t count, float lifetime);
 void simulateParticleSystem(float elapsed, ParticleSystem *system);
 void particleSystemGravity(float elapsed, ParticleSystem *system, float gravity[3]);
+void particleSystemPointGravity(float elapsed, ParticleSystem *system, float gravity[3], float distance, float strength);
 void drawParticleSystem(ParticleSystem *system, uint32_t texture, int positionAttribute, int texCoordAttribute, int colorAttribute);
 void resetParticle(ParticleSystem *system, Particle *particle);
 
@@ -46,6 +61,7 @@ void resetParticle(ParticleSystem *system, Particle *particle);
 void resetParticle(ParticleSystem *system, Particle *particle) {
 	particle->lifetime = fmod(particle->lifetime, system->particleLifetime);;
 	particle->size = system->particleSizeStart;
+	particle->sizeDeviation = ((float)rand()/(float)RAND_MAX) * system->particleSizeDeviation;
 	for(int i=0; i < 3; i++) {
 		particle->velocity[i] = (system->emitterDirection[i] - (system->emitterDirectionDeviation[i]*0.5f)+system->emitterDirectionDeviation[i]*((float)rand()/(float)RAND_MAX))* (system->emitterVelocity-(system->emitterVelocityDeviation*0.5f)+system->emitterVelocityDeviation*((float)rand()/(float)RAND_MAX));
 	}
@@ -56,9 +72,10 @@ void resetParticle(ParticleSystem *system, Particle *particle) {
 
 }
 
-void initParticleSystem(ParticleSystem *system, uint32_t count) {
+void initParticleSystem(ParticleSystem *system, uint32_t count, float lifetime) {
 	system->particleCount = count;
-	system->particleLifetime = 1.0;
+	system->particleLifetime = lifetime;
+	system->particleSizeDeviation = 0.0f;
 
 	memset(system->emitterPosition, 0, sizeof(float) * 3);
 	memset(system->emitterDirection, 0, sizeof(float) * 3);
@@ -66,6 +83,8 @@ void initParticleSystem(ParticleSystem *system, uint32_t count) {
 	memset(system->emitterDirectionDeviation, 0, sizeof(float) * 3);
 	system->emitterVelocity = 0.0f;
 	
+	system->friction = 0.0;
+
 	system->particleColorStart[0] = 1.0f;
 	system->particleColorStart[1] = 1.0f;
 	system->particleColorStart[2] = 1.0f;
@@ -78,8 +97,32 @@ void initParticleSystem(ParticleSystem *system, uint32_t count) {
 	system->particles = malloc(sizeof(Particle) * count);
 	for(int i=0; i < count; i++) {
 		resetParticle(system, &system->particles[i]);
-		system->particles[i].lifetime = system->particleLifetime + (((float)rand() / (float)RAND_MAX) * system->particleLifetime);
+		system->particles[i].lifetime = lifetime + (((float)rand() / (float)RAND_MAX) * system->particleLifetime);
 	}	
+}
+
+void particleSystemPointGravity(float elapsed, ParticleSystem *system, float gravity[3], float distance, float strength) {
+
+	for(int i=0; i < system->particleCount; i++) {
+		float naccel[3];
+		for(int j=0; j < 3; j++) {
+			naccel[j] = gravity[j] - system->particles[i].position[j];;
+		}
+		
+		
+		float tl = sqrtf( naccel[0] * naccel[0] + naccel[1] * naccel[1] + naccel[2] * naccel[2]);
+		float invTl = 1.0 / tl;
+
+		float dAffect = distance-tl;
+		if(dAffect < 0.0) {	
+			dAffect = 0.0;
+		}
+
+		for(int j=0; j < 3; j++) {
+			naccel[j] *= invTl;
+			system->particles[i].velocity[j] += (naccel[j] * strength) * elapsed * dAffect;
+		}
+	}
 }
 
 void particleSystemGravity(float elapsed, ParticleSystem *system, float gravity[3]) {
@@ -93,9 +136,10 @@ void particleSystemGravity(float elapsed, ParticleSystem *system, float gravity[
 void simulateParticleSystem(float elapsed, ParticleSystem *system) {
 	for(int i=0; i < system->particleCount; i++) {
 		float relativeLifetime = system->particles[i].lifetime / system->particleLifetime;
-		system->particles[i].size = lerp(system->particleSizeStart, system->particleSizeEnd, relativeLifetime);
+		system->particles[i].size = lerp(system->particleSizeStart+system->particles[i].sizeDeviation, system->particleSizeEnd, relativeLifetime);
 		for(int j=0; j < 3; j++) {
 			system->particles[i].position[j] += system->particles[i].velocity[j] * elapsed;
+			system->particles[i].velocity[j] = lerp(system->particles[i].velocity[j], 0.0, system->friction * elapsed);
 		}
 		for(int j=0; j < 4; j++) {
 			system->particles[i].color[j] = lerp(system->particleColorStart[j], system->particleColorEnd[j], relativeLifetime);
