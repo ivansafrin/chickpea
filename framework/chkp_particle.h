@@ -49,10 +49,14 @@ typedef struct {
 
 void initParticleSystem(ParticleSystem *system, uint32_t count, float lifetime);
 void simulateParticleSystem(float elapsed, ParticleSystem *system);
+
 void particleSystemGravity(float elapsed, ParticleSystem *system, float gravity[3]);
 void particleSystemPointGravity(float elapsed, ParticleSystem *system, float gravity[3], float distance, float strength);
+void particleSystemForceField(ParticleSystem *system, float position[3], float radius);
+
 void drawParticleSystem(ParticleSystem *system, uint32_t texture, int positionAttribute, int texCoordAttribute, int colorAttribute);
 void resetParticle(ParticleSystem *system, Particle *particle);
+void resetParticleSystem(ParticleSystem *system);
 
 #endif
 
@@ -94,12 +98,34 @@ void initParticleSystem(ParticleSystem *system, uint32_t count, float lifetime) 
 	system->particleColorEnd[1] = 1.0f;
 	system->particleColorEnd[2] = 1.0f;
 	system->particleColorEnd[3] = 1.0f;
-
 	system->particles = malloc(sizeof(Particle) * count);
-	for(int i=0; i < count; i++) {
+	
+	resetParticleSystem(system);
+}
+
+void resetParticleSystem(ParticleSystem *system) {
+	for(int i=0; i < system->particleCount; i++) {
 		resetParticle(system, &system->particles[i]);
-		system->particles[i].lifetime = lifetime + (((float)rand() / (float)RAND_MAX) * system->particleLifetime);
+		system->particles[i].lifetime = (((float)rand() / (float)RAND_MAX) * system->particleLifetime) * -1.0;
 	}	
+}
+
+void particleSystemForceField(ParticleSystem *system, float position[3], float radius) {
+	for(int i=0; i < system->particleCount; i++) {
+		float normal[3];
+		for(int j=0; j < 3; j++) {
+			normal[j] = system->particles[i].position[j] - position[j];
+		}
+		
+		float tl = sqrtf( normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+		if(tl < radius) {
+			float invTl = 1.0 / tl;
+			for(int j=0; j < 3; j++) {
+				normal[j] *= invTl;
+				system->particles[i].position[j] = position[j] + (normal[j] * radius);
+			}
+		}
+	}
 }
 
 void particleSystemPointGravity(float elapsed, ParticleSystem *system, float gravity[3], float distance, float strength) {
@@ -136,20 +162,22 @@ void particleSystemGravity(float elapsed, ParticleSystem *system, float gravity[
 
 void simulateParticleSystem(float elapsed, ParticleSystem *system) {
 	for(int i=0; i < system->particleCount; i++) {
-		float relativeLifetime = system->particles[i].lifetime / system->particleLifetime;
-		system->particles[i].size = lerp(system->particleSizeStart+system->particles[i].sizeDeviation, system->particleSizeEnd, relativeLifetime);
-		for(int j=0; j < 3; j++) {
-			system->particles[i].position[j] += system->particles[i].velocity[j] * elapsed;
-			system->particles[i].velocity[j] = lerp(system->particles[i].velocity[j], 0.0, system->friction * elapsed);
-		}
-		for(int j=0; j < 4; j++) {
-			system->particles[i].color[j] = lerp(system->particleColorStart[j], system->particleColorEnd[j], relativeLifetime);
-		}
-
 		system->particles[i].lifetime += elapsed;
 		if(system->particles[i].lifetime >= system->particleLifetime) {
 			resetParticle(system, &system->particles[i]);
 		}
+		if(system->particles[i].lifetime > 0.0) {
+			float relativeLifetime = system->particles[i].lifetime / system->particleLifetime;
+			system->particles[i].size = lerp(system->particleSizeStart+system->particles[i].sizeDeviation, system->particleSizeEnd, relativeLifetime);
+			for(int j=0; j < 3; j++) {
+				system->particles[i].position[j] += system->particles[i].velocity[j] * elapsed;
+				system->particles[i].velocity[j] = lerp(system->particles[i].velocity[j], 0.0, system->friction * elapsed);
+			}
+			for(int j=0; j < 4; j++) {
+				system->particles[i].color[j] = lerp(system->particleColorStart[j], system->particleColorEnd[j], relativeLifetime);
+			}
+		}
+
 		
 	}
 }
@@ -159,8 +187,9 @@ void drawParticleSystem(ParticleSystem *system, uint32_t texture, int positionAt
 	float *texCoordData = malloc(sizeof(float) * 12 * system->particleCount);
 	float *colorData = malloc(sizeof(float) * 24 * system->particleCount);
 
+	int particlesToRender = 0;
 	for(int i=0; i < system->particleCount; i++) {
-		
+		if(system->particles[i].lifetime > 0.0) {
 		float size = system->particles[i].size;
 		float newData[18] = {
 			system->particles[i].position[0] - size * 0.5, system->particles[i].position[1] + size * 0.5, system->particles[i].position[2],
@@ -171,7 +200,7 @@ void drawParticleSystem(ParticleSystem *system, uint32_t texture, int positionAt
 			system->particles[i].position[0] + size * 0.5, system->particles[i].position[1] - size * 0.5, system->particles[i].position[2],
 			system->particles[i].position[0] + size * 0.5, system->particles[i].position[1] + size * 0.5, system->particles[i].position[2]
 		};
-		memcpy(vertexData+(i*18), newData, sizeof(float) * 18);
+		memcpy(vertexData+(particlesToRender*18), newData, sizeof(float) * 18);
 		
 		float newTexData[12] = {
 			0.0f, 0.0,
@@ -183,7 +212,7 @@ void drawParticleSystem(ParticleSystem *system, uint32_t texture, int positionAt
 			1.0f, 0.0f,
 
 		};
-		memcpy(texCoordData+(i*12), newTexData, sizeof(float) * 12);
+		memcpy(texCoordData+(particlesToRender*12), newTexData, sizeof(float) * 12);
 
 		float newColorData[24] = {
 			 system->particles[i].color[0], system->particles[i].color[1], system->particles[i].color[2], system->particles[i].color[3],	
@@ -193,8 +222,9 @@ void drawParticleSystem(ParticleSystem *system, uint32_t texture, int positionAt
 			 system->particles[i].color[0], system->particles[i].color[1], system->particles[i].color[2], system->particles[i].color[3],	
 			 system->particles[i].color[0], system->particles[i].color[1], system->particles[i].color[2], system->particles[i].color[3]
 		};
-		memcpy(colorData+(i*24), newColorData, sizeof(float) * 24);
-
+		memcpy(colorData+(particlesToRender*24), newColorData, sizeof(float) * 24);
+		particlesToRender++;
+		}
 	}
 
 	glVertexAttribPointer(positionAttribute, 3, GL_FLOAT, GL_FALSE, 0, vertexData);
@@ -204,7 +234,7 @@ void drawParticleSystem(ParticleSystem *system, uint32_t texture, int positionAt
 	glVertexAttribPointer(colorAttribute, 4, GL_FLOAT, GL_FALSE, 0, colorData);
 	glEnableVertexAttribArray(colorAttribute);
 	glBindTexture(GL_TEXTURE_2D, texture);
-	glDrawArrays(GL_TRIANGLES, 0, system->particleCount * 6);
+	glDrawArrays(GL_TRIANGLES, 0, particlesToRender * 6);
 	
 	glDisableVertexAttribArray(positionAttribute);
 	glDisableVertexAttribArray(texCoordAttribute);
