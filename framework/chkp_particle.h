@@ -52,7 +52,7 @@ void simulateParticleSystem(float elapsed, ParticleSystem *system);
 
 void particleSystemGravity(float elapsed, ParticleSystem *system, float gravity[3]);
 void particleSystemPointGravity(float elapsed, ParticleSystem *system, float gravity[3], float distance, float strength);
-void particleSystemForceField(ParticleSystem *system, float position[3], float radius);
+void particleSystemForceField(ParticleSystem *system, float elapsed, float position[3], float radius);
 
 void drawParticleSystem(ParticleSystem *system, uint32_t texture, int positionAttribute, int texCoordAttribute, int colorAttribute);
 void resetParticle(ParticleSystem *system, Particle *particle);
@@ -110,7 +110,7 @@ void resetParticleSystem(ParticleSystem *system) {
 	}	
 }
 
-void particleSystemForceField(ParticleSystem *system, float position[3], float radius) {
+void particleSystemForceField(ParticleSystem *system, float elapsed, float position[3], float radius) {
 	for(int i=0; i < system->particleCount; i++) {
 		float normal[3];
 		for(int j=0; j < 3; j++) {
@@ -124,6 +124,8 @@ void particleSystemForceField(ParticleSystem *system, float position[3], float r
 				normal[j] *= invTl;
 				system->particles[i].position[j] = position[j] + (normal[j] * radius);
 			}
+		//	system->particles[i].velocity[0] += normal[0] * 30.0 * elapsed;
+		//	system->particles[i].velocity[1] += normal[1] * 30.0 * elapsed;
 		}
 	}
 }
@@ -131,31 +133,34 @@ void particleSystemForceField(ParticleSystem *system, float position[3], float r
 void particleSystemPointGravity(float elapsed, ParticleSystem *system, float gravity[3], float distance, float strength) {
 
 	for(int i=0; i < system->particleCount; i++) {
-		float naccel[3];
-		for(int j=0; j < 3; j++) {
-			naccel[j] = gravity[j] - system->particles[i].position[j];;
-		}
+		if(system->particles[i].lifetime >= 0.0) {
+			float naccel[3];
+			for(int j=0; j < 3; j++) {
+				naccel[j] = gravity[j] - system->particles[i].position[j];;
+			}	
 		
-		
-		float tl = sqrtf( naccel[0] * naccel[0] + naccel[1] * naccel[1] + naccel[2] * naccel[2]);
-		float invTl = 1.0 / tl;
+			float tl = sqrtf( naccel[0] * naccel[0] + naccel[1] * naccel[1] + naccel[2] * naccel[2]);
+			float invTl = 1.0 / tl;
 
-		float dAffect = distance-tl;
-		if(dAffect < 0.0) {	
-			dAffect = 0.0;
-		}
+			float dAffect = distance-tl;
+			if(dAffect < 0.0) {	
+				dAffect = 0.0;
+			}
 
-		for(int j=0; j < 3; j++) {
-			naccel[j] *= invTl;
-			system->particles[i].velocity[j] += (naccel[j] * strength) * elapsed * dAffect;
+			for(int j=0; j < 3; j++) {
+				naccel[j] *= invTl;
+				system->particles[i].velocity[j] += (naccel[j] * strength) * elapsed * dAffect;
+			}
 		}
 	}
 }
 
 void particleSystemGravity(float elapsed, ParticleSystem *system, float gravity[3]) {
 	for(int i=0; i < system->particleCount; i++) {
-		for(int j=0; j < 3; j++) {
-			system->particles[i].velocity[j] += gravity[j] * elapsed;
+		if(system->particles[i].lifetime >= 0.0) {
+			for(int j=0; j < 3; j++) {
+				system->particles[i].velocity[j] += gravity[j] * elapsed;
+			}
 		}
 	}
 }
