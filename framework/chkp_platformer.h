@@ -152,7 +152,7 @@ void createEmptyTilemap(PlatformerWorld *world, int sizeX, int sizeY) {
 	world->worldData = malloc(sizeof(char*) * sizeY);
 	for(int i=0; i < sizeY; i++) {
 		world->worldData[i] = malloc(sizeX);
-		memset(world->worldData[i], 1, sizeX);
+		memset(world->worldData[i], 0, sizeX);
 	}
 }
 

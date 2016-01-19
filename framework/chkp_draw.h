@@ -22,10 +22,12 @@
 typedef struct {
 	unsigned int texture;
 	stbtt_bakedchar cdata[96];
+	int textureSize;
 } TTFFont;
 
 void loadTTFFont(const char *fontFile, TTFFont *font, int fontSize);
-void drawTTFText(TTFFont *font, float scale, int positionAttribute, int texCoordAttribute, char *text, int center);
+void loadTTFFontRGBA(const char *fontFile, TTFFont *font, int fontSize, char color[3]);
+float drawTTFText(TTFFont *font, float x, float y, float scale, int positionAttribute, int texCoordAttribute, char *text, int center);
 
 GLuint loadTexture(const char *image_path);
 GLuint loadShaderFromFile(const char *shaderFile, GLenum type);
@@ -69,9 +71,7 @@ STBTT_DEF void getSTBTTBakedQuad(stbtt_bakedchar *chardata, int pw, int ph, int 
    *xpos += b->xadvance;
 }
 
-void drawTTFText(TTFFont *font, float scale, int positionAttribute, int texCoordAttribute, char *text, int center) {
-	float x=0.0f;
-	float y=0.0f;
+float drawTTFText(TTFFont *font, float x, float y, float scale, int positionAttribute, int texCoordAttribute, char *text, int center) {
 	float *vertices = malloc(sizeof(float) * 6*2*strlen(text));
 	float *texCoords = malloc(sizeof(float) * 6*2*strlen(text));
 	float *pVertices = vertices;
@@ -79,11 +79,13 @@ void drawTTFText(TTFFont *font, float scale, int positionAttribute, int texCoord
 	int numVertices = 0;
 	float textWidth = 0.0f;
 	float textHeight = 0.0f;
+	float ax=0;
+	float ay=0;
 	stbtt_aligned_quad q;
 	while (*text) {
 		if (*text >= 32) {
-			getSTBTTBakedQuad(font->cdata, 1024,1024, *text-32, &x,&y,&q,1);
-			float newVertices[] = {q.x0*scale,q.y0 * scale, q.x1*scale,q.y0 * scale, q.x1*scale,q.y1 * scale, q.x0*scale,q.y0*scale, q.x1*scale,q.y1*scale, q.x0*scale,q.y1*scale};
+			getSTBTTBakedQuad(font->cdata, font->textureSize,font->textureSize, *text-32, &ax,&ay,&q,1);
+			float newVertices[] = {x+(q.x0*scale) ,y+(q.y0 * scale),x+( q.x1*scale),y+(q.y0 * scale), x+(q.x1*scale),y+(q.y1 * scale), x+(q.x0*scale),y+(q.y0*scale), x+(q.x1*scale),y+(q.y1*scale), x+(q.x0*scale),y+(q.y1*scale)};
 			memcpy(pVertices, newVertices, sizeof(float) * 12);
 			float newTexCoords[] = {q.s0,q.t0, q.s1,q.t0, q.s1,q.t1, q.s0,q.t0, q.s1,q.t1, q.s0,q.t1};
 			memcpy(pTexCoords, newTexCoords, sizeof(float) * 12);
@@ -122,22 +124,48 @@ void drawTTFText(TTFFont *font, float scale, int positionAttribute, int texCoord
 	free(vertices);
 	free(texCoords);
 
+	return ax*scale;
 }
 
+void loadTTFFontRGBA(const char *fontFile, TTFFont *font, int fontSize, char color[3]) {
+	unsigned char *ttf_buffer = malloc(1<<20);
+	FILE *f = fopen(fontFile, "rb");
+	fread(ttf_buffer, 1, 1<<20, f);
+
+	font->textureSize = fontSize * 16;
+	unsigned char *temp_bitmap = malloc(font->textureSize*font->textureSize);
+	stbtt_BakeFontBitmap(ttf_buffer,0, (float)fontSize, temp_bitmap,font->textureSize,font->textureSize, 32,96, font->cdata);
+	free(ttf_buffer);
+
+	unsigned char *finalBitmap = malloc(font->textureSize*font->textureSize*4);
+	for(int i=0; i < font->textureSize*font->textureSize; i++) {
+		finalBitmap[(i*4)] = color[0];
+		finalBitmap[(i*4)+1] = color[1];
+		finalBitmap[(i*4)+2] = color[2];
+		finalBitmap[(i*4)+3] = temp_bitmap[i];
+	}
+	free(temp_bitmap);
+
+	glGenTextures(1, &font->texture);
+	glBindTexture(GL_TEXTURE_2D, font->texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, font->textureSize,font->textureSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, finalBitmap);
+	free(finalBitmap);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	fclose(f);
+}
 
 void loadTTFFont(const char *fontFile, TTFFont *font, int fontSize) {
 	unsigned char *ttf_buffer = malloc(1<<20);
 	FILE *f = fopen(fontFile, "rb");
 	fread(ttf_buffer, 1, 1<<20, f);
 
-	int textureSize = fontSize * 16;
-	unsigned char *temp_bitmap = malloc(textureSize*textureSize);
-
-	stbtt_BakeFontBitmap(ttf_buffer,0, (float)fontSize, temp_bitmap,textureSize,textureSize, 32,96, font->cdata);
+	font->textureSize = fontSize * 16;
+	unsigned char *temp_bitmap = malloc(font->textureSize*font->textureSize);
+	stbtt_BakeFontBitmap(ttf_buffer,0, (float)fontSize, temp_bitmap,font->textureSize,font->textureSize, 32,96, font->cdata);
 	free(ttf_buffer);
 	glGenTextures(1, &font->texture);
 	glBindTexture(GL_TEXTURE_2D, font->texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, textureSize,textureSize, 0, GL_ALPHA, GL_UNSIGNED_BYTE, temp_bitmap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, font->textureSize,font->textureSize, 0, GL_ALPHA, GL_UNSIGNED_BYTE, temp_bitmap);
 	free(temp_bitmap);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	fclose(f);
