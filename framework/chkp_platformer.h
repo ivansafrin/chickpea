@@ -13,7 +13,6 @@
 #ifndef platformer_h
 #define platformer_h
 
-#include "chkp_vector.h"
 #include "chkp_util.h"
 #include "chkp_matrix.h"
 #include <math.h>
@@ -32,7 +31,7 @@ typedef struct {
 } TilemapEntityPlacement;
 
 typedef struct {
-	Vector3 gravity;
+	float gravity[3];
 	float friction;
 	int worldSizeX;
 	int worldSizeY;
@@ -45,12 +44,12 @@ typedef struct {
 } PlatformerWorld;
 
 typedef struct {
-	Vector3 position;
-	Vector3 scale;
-	Vector3 size;
+	float position[3];
+	float scale[3];
+	float size[3];
 	
-	Vector3 acceleration;
-	Vector3 velocity;
+	float acceleration[3];
+	float velocity[3];
 	float restitution;
 	
 	int isStatic;
@@ -72,7 +71,7 @@ void saveTilemap(PlatformerWorld *world, const char *fileName);
 void createEmptyTilemap(PlatformerWorld *world, int sizeX, int sizeY);
 void freeTilemap(PlatformerWorld *world);
 void renderTilemap(PlatformerWorld *world, int tileTexture, int positionAttribute, int texCoordAttribute);
-int boxBoxCollisionTest(Vector3 *position1, Vector3 *size1, Vector3 *position2, Vector3 *size2);
+int boxBoxCollisionTest(float *position1, float *size1, float *position2, float *size2);
 
 #endif
 
@@ -224,11 +223,11 @@ void renderTilemap(PlatformerWorld *world, int tileTexture, int positionAttribut
 	
 }
 
-int boxBoxCollisionTest(Vector3 *position1, Vector3 *size1, Vector3 *position2, Vector3 *size2) {
-	if(position1->y-size1->y/2.0f > position2->y + size2->y/2.0f
-	   || position1->y+size1->y/2.0f < position2->y - size2->y/2.0f
-	   || position1->x-size1->x/2.0f > position2->x + size2->x/2.0f
-	   || position1->x+size1->x/2.0f < position2->x - size2->x/2.0f
+int boxBoxCollisionTest(float *position1, float *size1, float *position2, float *size2) {
+	if(position1[1]-size1[1]/2.0f > position2[1] + size2[1]/2.0f
+	   || position1[1]+size1[1]/2.0f < position2[1] - size2[1]/2.0f
+	   || position1[0]-size1[0]/2.0f > position2[0] + size2[0]/2.0f
+	   || position1[0]+size1[0]/2.0f < position2[0] - size2[0]/2.0f
 	   ) {
 		return 0;
 	}
@@ -236,9 +235,9 @@ int boxBoxCollisionTest(Vector3 *position1, Vector3 *size1, Vector3 *position2, 
 }
 
 void initPlatformerEntity(PlatformerEntity *entity) {
-	entity->scale.x = 1.0;
-	entity->scale.y = 1.0;
-	entity->scale.z = 1.0;
+	entity->scale[0] = 1.0;
+	entity->scale[1] = 1.0;
+	entity->scale[2] = 1.0;
 	entity->restitution = 0.0;
 	entity->isStatic = 0;
 }
@@ -302,93 +301,93 @@ void updatePlatformerEntity(float elapsed, PlatformerWorld *world, PlatformerEnt
 	
 	if(!entity->isStatic) {
 		
-		entity->velocity.x = lerp(entity->velocity.x, 0.0, world->friction * elapsed);
+		entity->velocity[0] = lerp(entity->velocity[0], 0.0, world->friction * elapsed);
 		
-		entity->velocity.x += entity->acceleration.x * elapsed;
-		entity->velocity.y += entity->acceleration.y * elapsed;
-		entity->velocity.x += world->gravity.x * elapsed;
-		entity->velocity.y += world->gravity.y * elapsed;
+		entity->velocity[0] += entity->acceleration[0] * elapsed;
+		entity->velocity[1] += entity->acceleration[1] * elapsed;
+		entity->velocity[0] += world->gravity[0] * elapsed;
+		entity->velocity[1] += world->gravity[1] * elapsed;
 
-		entity->position.y += entity->velocity.y * elapsed;
+		entity->position[1] += entity->velocity[1] * elapsed;
 		
 		for(int i=0; i < numCollisionEntities; i++) {
-			if(boxBoxCollisionTest(&entity->position, &entity->size, &collisionEntities[i].position, &collisionEntities[i].size)) {
+			if(boxBoxCollisionTest(entity->position, entity->size, collisionEntities[i].position, collisionEntities[i].size)) {
 				
-				float penetration = fabs( fabs(entity->position.y - collisionEntities[i].position.y) - entity->size.y/2.0f - collisionEntities[i].size.y / 2.0f);
-				if(entity->position.y > collisionEntities[i].position.y) {
-					entity->position.y += penetration + 0.0000001;
+				float penetration = fabs( fabs(entity->position[1] - collisionEntities[i].position[1]) - entity->size[1]/2.0f - collisionEntities[i].size[1] / 2.0f);
+				if(entity->position[1] > collisionEntities[i].position[1]) {
+					entity->position[1] += penetration + 0.0000001;
 					entity->bottomCollisionFlag = 1;
 				} else {
-					entity->position.y -= penetration + 0.0000001;
+					entity->position[1] -= penetration + 0.0000001;
 					entity->topCollisionFlag = 1;
 				}
-				if(fabs(entity->velocity.y) > 0.01f) {
-					entity->velocity.y = -entity->velocity.y * entity->restitution;
+				if(fabs(entity->velocity[1]) > 0.01f) {
+					entity->velocity[1] = -entity->velocity[1] * entity->restitution;
 				} else {
-					entity->velocity.y = 0.0f;
+					entity->velocity[1] = 0.0f;
 				}
 			}
 		}
 		
 
-		float adjust = checkPointForGridCollisionY(world, solidTiles, numSolidTiles, entity->position.x, entity->position.y - entity->size.y * 0.5 * fabs(entity->scale.y));
+		float adjust = checkPointForGridCollisionY(world, solidTiles, numSolidTiles, entity->position[0], entity->position[1] - entity->size[1] * 0.5 * fabs(entity->scale[1]));
 		if(adjust != 0.0f) {
-			entity->position.y += adjust;
-			if(fabs(entity->velocity.y) > 1.0) {
-				entity->velocity.y = -entity->velocity.y * entity->restitution;
+			entity->position[1] += adjust;
+			if(fabs(entity->velocity[1]) > 1.0) {
+				entity->velocity[1] = -entity->velocity[1] * entity->restitution;
 			} else {
-				entity->velocity.y = 0.0f;
+				entity->velocity[1] = 0.0f;
 			}
 			entity->bottomCollisionFlag = 1;
 		}
 		
-		adjust = checkPointForGridCollisionY(world, solidTiles, numSolidTiles, entity->position.x, entity->position.y + entity->size.y * 0.5 * fabs(entity->scale.y));
+		adjust = checkPointForGridCollisionY(world, solidTiles, numSolidTiles, entity->position[0], entity->position[1] + entity->size[1] * 0.5 * fabs(entity->scale[1]));
 		if(adjust != 0.0f) {
-			entity->position.y += adjust - world->tileSize;
-			if(fabs(entity->velocity.y) > 0.01f) {
-				entity->velocity.y = -entity->velocity.y * entity->restitution;
+			entity->position[1] += adjust - world->tileSize;
+			if(fabs(entity->velocity[1]) > 0.01f) {
+				entity->velocity[1] = -entity->velocity[1] * entity->restitution;
 			} else {
-				entity->velocity.y = 0.0f;
+				entity->velocity[1] = 0.0f;
 			}
 			entity->topCollisionFlag = 1;
 		}
 		
-		entity->position.x += entity->velocity.x * elapsed;
+		entity->position[0] += entity->velocity[0] * elapsed;
 		for(int i=0; i < numCollisionEntities; i++) {
-			if(boxBoxCollisionTest(&entity->position, &entity->size, &collisionEntities[i].position, &collisionEntities[i].size)) {
+			if(boxBoxCollisionTest(entity->position, entity->size, collisionEntities[i].position, collisionEntities[i].size)) {
 				
-				float penetration = fabs( fabs(entity->position.x - collisionEntities[i].position.x) - entity->size.x/2.0f - collisionEntities[i].size.x / 2.0f);
-				if(entity->position.x > collisionEntities[i].position.x) {
-					entity->position.x += penetration + 0.0000001;
+				float penetration = fabs( fabs(entity->position[0] - collisionEntities[i].position[0]) - entity->size[0]/2.0f - collisionEntities[i].size[0] / 2.0f);
+				if(entity->position[0] > collisionEntities[i].position[0]) {
+					entity->position[0] += penetration + 0.0000001;
 					entity->leftCollisionFlag = 1;
 				} else {
-					entity->position.x -= penetration + 0.000001;
+					entity->position[0] -= penetration + 0.000001;
 					entity->rightCollisionFlag = 1;
 				}
-				entity->velocity.x = -entity->velocity.x * entity->restitution;
+				entity->velocity[0] = -entity->velocity[0] * entity->restitution;
 			}
 		}
 		
 		
-		adjust = checkPointForGridCollisionX(world, solidTiles, numSolidTiles, entity->position.x - entity->size.x * 0.5 * fabs(entity->scale.x), entity->position.y);
+		adjust = checkPointForGridCollisionX(world, solidTiles, numSolidTiles, entity->position[0] - entity->size[0] * 0.5 * fabs(entity->scale[0]), entity->position[1]);
 		if(adjust != 0.0f) {
-			entity->position.x += adjust;
-			entity->velocity.x = -entity->velocity.x * entity->restitution;
+			entity->position[0] += adjust;
+			entity->velocity[0] = -entity->velocity[0] * entity->restitution;
 			entity->leftCollisionFlag = 1;
 		}
 		
-		adjust = checkPointForGridCollisionX(world, solidTiles, numSolidTiles, entity->position.x + entity->size.x * 0.5 * fabs(entity->scale.x), entity->position.y);
+		adjust = checkPointForGridCollisionX(world, solidTiles, numSolidTiles, entity->position[0] + entity->size[0] * 0.5 * fabs(entity->scale[0]), entity->position[1]);
 		if(adjust != 0.0f) {
-			entity->position.x += adjust - world->tileSize;
-			entity->velocity.x = -entity->velocity.x * entity->restitution;
+			entity->position[0] += adjust - world->tileSize;
+			entity->velocity[0] = -entity->velocity[0] * entity->restitution;
 			entity->rightCollisionFlag = 1;
 		}
 		
 	}
 
 	matrixSetIdentity(entity->modelMatrix);
-	matrixTranslate(entity->modelMatrix, entity->position.x, entity->position.y, entity->position.z);	
-	matrixScale(entity->modelMatrix, entity->scale.x, entity->scale.y, entity->scale.z);
+	matrixTranslate(entity->modelMatrix, entity->position[0], entity->position[1], entity->position[2]);	
+	matrixScale(entity->modelMatrix, entity->scale[0], entity->scale[1], entity->scale[2]);
 }
 
 #endif
