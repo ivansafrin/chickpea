@@ -52,7 +52,7 @@ void simulateParticleSystem(float elapsed, ParticleSystem *system);
 
 void particleSystemGravity(float elapsed, ParticleSystem *system, float gravity[3]);
 void particleSystemPointGravity(float elapsed, ParticleSystem *system, float gravity[3], float distance, float strength);
-void particleSystemForceField(ParticleSystem *system, float elapsed, float position[3], float radius);
+void particleSystemForceField(ParticleSystem *system, float elapsed, float position[3], float radius, float reflect);
 
 void drawParticleSystem(ParticleSystem *system, uint32_t texture, int positionAttribute, int texCoordAttribute, int colorAttribute);
 void resetParticle(ParticleSystem *system, Particle *particle);
@@ -110,7 +110,7 @@ void resetParticleSystem(ParticleSystem *system) {
 	}	
 }
 
-void particleSystemForceField(ParticleSystem *system, float elapsed, float position[3], float radius) {
+void particleSystemForceField(ParticleSystem *system, float elapsed, float position[3], float radius, float reflect) {
 	for(int i=0; i < system->particleCount; i++) {
 		float normal[3];
 		for(int j=0; j < 3; j++) {
@@ -124,8 +124,8 @@ void particleSystemForceField(ParticleSystem *system, float elapsed, float posit
 				normal[j] *= invTl;
 				system->particles[i].position[j] = position[j] + (normal[j] * radius);
 			}
-		//	system->particles[i].velocity[0] += normal[0] * 30.0 * elapsed;
-		//	system->particles[i].velocity[1] += normal[1] * 30.0 * elapsed;
+			system->particles[i].velocity[0] += normal[0] * reflect * elapsed;
+			system->particles[i].velocity[1] += normal[1] * reflect * elapsed;
 		}
 	}
 }
