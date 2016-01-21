@@ -18,6 +18,7 @@
 void matrixMultiply(float *m, float *m2, float *target);
 void matrixSetIdentity(float *m);
 void matrixSetOrthoProjection(float *m, float left, float right, float bottom, float top, float zNear, float zFar);
+void matrixSetPerspectiveProjection(float *m, float fov, float aspect, float zNear, float zFar);
 void matrixSetRoll(float *m, float roll);
 void matrixRoll(float *m, float roll);
 void matrixSetPosition(float *m, float x, float y, float z);
@@ -91,6 +92,14 @@ void matrixSetOrthoProjection(float *m, float left, float right, float bottom, f
 	m[14] = -((zFar+zNear)/(zFar-zNear));
 }
 
+void matrixSetPerspectiveProjection(float *m, float fov, float aspect, float zNear, float zFar) {
+	m[0] = 1.0f/tanf(fov/2.0)/aspect;
+	m[5] = 1.0f/tanf(fov/2.0);
+	m[10] = (zFar+zNear)/(zNear-zFar);
+	m[14] = (2.0f*zFar*zNear)/(zNear-zFar);
+	m[11] = -1.0f;
+	m[15] = 0.0f;
+}
 
 void matrixSetRoll(float *m, float roll) {
 	m[0] = cos(roll);
