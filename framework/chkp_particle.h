@@ -13,6 +13,9 @@
 #define chkp_particle_h
 
 #include <chkp_util.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
 
 typedef struct {
 	float position[3];
@@ -228,7 +231,7 @@ void drawParticleSystem(ParticleSystem *system, uint32_t texture, int positionAt
 			 system->particles[i].color[0], system->particles[i].color[1], system->particles[i].color[2], system->particles[i].color[3]
 		};
 		memcpy(colorData+(particlesToRender*24), newColorData, sizeof(float) * 24);
-		particlesToRender++;
+ 		particlesToRender++;
 		}
 	}
 
@@ -238,6 +241,7 @@ void drawParticleSystem(ParticleSystem *system, uint32_t texture, int positionAt
 	glEnableVertexAttribArray(texCoordAttribute);
 	glVertexAttribPointer(colorAttribute, 4, GL_FLOAT, GL_FALSE, 0, colorData);
 	glEnableVertexAttribArray(colorAttribute);
+
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glDrawArrays(GL_TRIANGLES, 0, particlesToRender * 6);
 	
@@ -247,7 +251,7 @@ void drawParticleSystem(ParticleSystem *system, uint32_t texture, int positionAt
 	
 	free(vertexData);
 	free(texCoordData);
-
+	free(colorData);
 }
 
 #endif
