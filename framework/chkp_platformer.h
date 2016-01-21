@@ -68,6 +68,7 @@ void initPlatformerEntity(PlatformerEntity *entity);
 void loadTilemapFromFlare(PlatformerWorld *world, const char *fileName);
 void loadTilemap(PlatformerWorld *world, const char *fileName);
 void saveTilemap(PlatformerWorld *world, const char *fileName);
+void resizeTilemap(PlatformerWorld *world, int sizeX, int sizeY);
 void createEmptyTilemap(PlatformerWorld *world, int sizeX, int sizeY);
 void freeTilemap(PlatformerWorld *world);
 void renderTilemap(PlatformerWorld *world, int tileTexture, int positionAttribute, int texCoordAttribute);
@@ -139,11 +140,44 @@ void loadTilemapFromFlare(PlatformerWorld *world, const char *fileName) {
 }
 
 void loadTilemap(PlatformerWorld *world, const char *fileName) {
-	
+	FILE *f = fopen(fileName, "r");
+	fread(&world->worldSizeX, sizeof(uint32_t), 1, f);
+	fread(&world->worldSizeY, sizeof(uint32_t), 1, f);
+	createEmptyTilemap(world, world->worldSizeX, world->worldSizeY);
+	for(int i=0; i < world->worldSizeY; i++) {
+		fread(world->worldData[i], 1, world->worldSizeX, f);
+	}
+	fclose(f);
 }
 
 void saveTilemap(PlatformerWorld *world, const char *fileName) {
-	
+	FILE *f = fopen(fileName, "w");
+	fwrite(&world->worldSizeX, sizeof(uint32_t), 1, f);
+	fwrite(&world->worldSizeY, sizeof(uint32_t), 1, f);
+	for(int i=0; i < world->worldSizeY; i++) {
+		fwrite(world->worldData[i], 1, world->worldSizeX, f);
+	}
+	fclose(f);
+}
+
+void resizeTilemap(PlatformerWorld *world, int sizeX, int sizeY) {
+	if(sizeY < world->worldSizeY) {
+		for(int i=sizeY; i < world->worldSizeY; i++) {
+			free(world->worldData[i]);
+		}
+	}
+	world->worldData = realloc(world->worldData, sizeof(char*) * sizeY);
+	if(sizeY > world->worldSizeY) {
+		for(int i=world->worldSizeY; i < sizeY; i++) {
+			world->worldData[i] = malloc(sizeX);
+		}
+	}
+	for(int i=0; i < sizeY; i++) {
+		world->worldData[i] = realloc(world->worldData[i], sizeX);
+	}
+
+	world->worldSizeX = sizeX;
+	world->worldSizeY = sizeY;
 }
 
 void createEmptyTilemap(PlatformerWorld *world, int sizeX, int sizeY) {
