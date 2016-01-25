@@ -29,7 +29,7 @@ void loadTTFFont(const char *fontFile, TTFFont *font, int fontSize);
 void loadTTFFontRGBA(const char *fontFile, TTFFont *font, int fontSize, char color[3]);
 float drawTTFText(TTFFont *font, float x, float y, float scale, int positionAttribute, int texCoordAttribute, char *text, int center);
 
-GLuint loadTexture(const char *image_path);
+GLuint loadTexture(const char *image_path, int nearest, int repeat);
 GLuint loadShaderFromFile(const char *shaderFile, GLenum type);
 GLuint createProgram(const char *vertexShaderFile, const char *fragmentShaderFile);
 void drawSprite(GLuint spriteTexture, int positionAttribute, int texCoordAttribute, int index, int spriteCountX, int spriteCountY, float size);
@@ -171,7 +171,7 @@ void loadTTFFont(const char *fontFile, TTFFont *font, int fontSize) {
 	fclose(f);
 }
 
-GLuint loadTexture(const char *image_path) {
+GLuint loadTexture(const char *image_path, int nearest, int repeat) {
 	int x,y,n;
 	stbi_set_flip_vertically_on_load(0);
 	stbi_uc *data = stbi_load(image_path, &x, &y, &n, 4);
@@ -183,11 +183,22 @@ GLuint loadTexture(const char *image_path) {
 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, x, y, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	if(nearest) {
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	} else {
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	}
+
+	if(repeat) {
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	} else {
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	}
 	return textureID;
 }
 

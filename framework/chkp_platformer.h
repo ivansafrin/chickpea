@@ -207,38 +207,40 @@ void renderTilemap(PlatformerWorld *world, int tileTexture, int positionAttribut
 	float *vertexData = malloc(sizeof(float) * 12 * world->worldSizeX * world->worldSizeY);
 	float *texCoordData = malloc(sizeof(float) * 12 * world->worldSizeX * world->worldSizeY);
 	
-	int i =0;
+	int numTiles =0;
 	for(int y=0; y < world->worldSizeY; y++) {
 		for(int x=0; x < world->worldSizeX; x++) {
-			float u = (float)(((int)world->worldData[y][x]) % world->numTilesX) / (float) world->numTilesX;
-			float v = (float)(((int)world->worldData[y][x]) / world->numTilesX) / (float) world->numTilesY;
+			if(world->worldData[y][x] > 0) {
+				float u = (float)(((int)world->worldData[y][x]) % world->numTilesX) / (float) world->numTilesX;
+				float v = (float)(((int)world->worldData[y][x]) / world->numTilesX) / (float) world->numTilesY;
 			
-			u += padding;
-			v += padding;
+				u += padding;
+				v += padding;
 			
-			float newData[12] = {
-				world->tileSize * x, -world->tileSize * y,
-				world->tileSize * x, (-world->tileSize * y)-world->tileSize,
-				(world->tileSize * x)+world->tileSize, (-world->tileSize * y)-world->tileSize,
-				world->tileSize * x, -world->tileSize * y,
-				(world->tileSize * x)+world->tileSize, (-world->tileSize * y)-world->tileSize,
-				(world->tileSize * x)+world->tileSize, -world->tileSize * y
+				float newData[12] = {
+					world->tileSize * x, -world->tileSize * y,
+					world->tileSize * x, (-world->tileSize * y)-world->tileSize,
+					(world->tileSize * x)+world->tileSize, (-world->tileSize * y)-world->tileSize,
+					world->tileSize * x, -world->tileSize * y,
+					(world->tileSize * x)+world->tileSize, (-world->tileSize * y)-world->tileSize,
+					(world->tileSize * x)+world->tileSize, -world->tileSize * y
 
-			};
-			memcpy(vertexData+(i*12), newData, sizeof(float) * 12);
+				};
+				memcpy(vertexData+(numTiles*12), newData, sizeof(float) * 12);
 			
-			float newTexData[12] = {
-				u, v,
-				u, v+texture_size_y,
-				u+texture_size_x, v+(texture_size_y),
-				u, v,				
-				u+texture_size_x, v+(texture_size_y),
-				u+texture_size_x, v
+				float newTexData[12] = {
+					u, v,
+					u, v+texture_size_y,
+					u+texture_size_x, v+(texture_size_y),
+					u, v,				
+					u+texture_size_x, v+(texture_size_y),
+					u+texture_size_x, v
 
-			};
-			memcpy(texCoordData+(i*12), newTexData, sizeof(float) * 12);
+				};
+				memcpy(texCoordData+(numTiles*12), newTexData, sizeof(float) * 12);
 			
-			i++;
+				numTiles++;
+			}
 		}
 	}
 	
@@ -247,7 +249,7 @@ void renderTilemap(PlatformerWorld *world, int tileTexture, int positionAttribut
 	glVertexAttribPointer(texCoordAttribute, 2, GL_FLOAT, GL_FALSE, 0, texCoordData);
 	glEnableVertexAttribArray(texCoordAttribute);
 	glBindTexture(GL_TEXTURE_2D, tileTexture);
-	glDrawArrays(GL_TRIANGLES, 0, world->worldSizeX * world->worldSizeY * 6);
+	glDrawArrays(GL_TRIANGLES, 0, numTiles * 6);
 	
 	glDisableVertexAttribArray(positionAttribute);
 	glDisableVertexAttribArray(texCoordAttribute);
