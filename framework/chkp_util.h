@@ -65,4 +65,11 @@ float easeInOut(float from, float to, float time) {
 	return (1.0f-tVal)*from + tVal*to;
 }
 
+float easeOutElastic(float from, float to, float time) {
+	float p = 0.3f;
+	float s = p/4.0f;
+	float diff = (to - from);
+	return from + diff + (diff*pow(2.0f,-10.0f*time) * sin((time-s)*(2*PI)/p));
+}
+
 #endif
