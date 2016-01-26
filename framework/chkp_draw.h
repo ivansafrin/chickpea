@@ -25,8 +25,8 @@ typedef struct {
 	int textureSize;
 } TTFFont;
 
-void loadTTFFont(const char *fontFile, TTFFont *font, int fontSize);
-void loadTTFFontRGBA(const char *fontFile, TTFFont *font, int fontSize, char color[3]);
+int loadTTFFont(const char *fontFile, TTFFont *font, int fontSize);
+int loadTTFFontRGBA(const char *fontFile, TTFFont *font, int fontSize, char color[3]);
 float drawTTFText(TTFFont *font, float x, float y, float scale, int positionAttribute, int texCoordAttribute, char *text, int center);
 
 GLuint loadTexture(const char *image_path, int nearest, int repeat);
@@ -127,9 +127,12 @@ float drawTTFText(TTFFont *font, float x, float y, float scale, int positionAttr
 	return ax*scale;
 }
 
-void loadTTFFontRGBA(const char *fontFile, TTFFont *font, int fontSize, char color[3]) {
+int loadTTFFontRGBA(const char *fontFile, TTFFont *font, int fontSize, char color[3]) {
 	unsigned char *ttf_buffer = malloc(1<<20);
 	FILE *f = fopen(fontFile, "rb");
+	if(!f) {
+		return 0;
+	}
 	fread(ttf_buffer, 1, 1<<20, f);
 
 	font->textureSize = fontSize * 16;
@@ -152,16 +155,20 @@ void loadTTFFontRGBA(const char *fontFile, TTFFont *font, int fontSize, char col
 	free(finalBitmap);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	fclose(f);
+	return 1;
 }
 
-void loadTTFFont(const char *fontFile, TTFFont *font, int fontSize) {
+int loadTTFFont(const char *fontFile, TTFFont *font, int fontSize) {
 	unsigned char *ttf_buffer = malloc(1<<20);
 	FILE *f = fopen(fontFile, "rb");
+	if(!f) {
+		return 0;
+	}
 	fread(ttf_buffer, 1, 1<<20, f);
 
 	font->textureSize = fontSize * 16;
 	unsigned char *temp_bitmap = malloc(font->textureSize*font->textureSize);
-	stbtt_BakeFontBitmap(ttf_buffer,0, (float)fontSize, temp_bitmap,font->textureSize,font->textureSize, 32,96, font->cdata);
+	int res = stbtt_BakeFontBitmap(ttf_buffer,0, (float)fontSize, temp_bitmap,font->textureSize,font->textureSize, 32,96, font->cdata);
 	free(ttf_buffer);
 	glGenTextures(1, &font->texture);
 	glBindTexture(GL_TEXTURE_2D, font->texture);
@@ -169,6 +176,7 @@ void loadTTFFont(const char *fontFile, TTFFont *font, int fontSize) {
 	free(temp_bitmap);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	fclose(f);
+	return 1;
 }
 
 GLuint loadTexture(const char *image_path, int nearest, int repeat) {
