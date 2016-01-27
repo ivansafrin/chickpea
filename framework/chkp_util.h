@@ -22,6 +22,7 @@ float easeIn(float from, float to, float time);
 float easeOut(float from, float to, float time);
 float easeInOut(float from, float to, float time);
 float easeOutElastic(float from, float to, float time);
+float easeOutBounce(float from, float to, float t);
 
 #endif
 
@@ -70,6 +71,22 @@ float easeOutElastic(float from, float to, float time) {
 	float s = p/4.0f;
 	float diff = (to - from);
 	return from + diff + (diff*pow(2.0f,-10.0f*time) * sin((time-s)*(2*PI)/p));
+}
+
+float easeOutBounce(float from, float to, float t) {
+	float diff = (to - from);
+	if (t < (1.0/2.75)) {
+		return diff*(7.5625*t*t) + from;
+	} else if (t < (2/2.75)) {
+		float td = t-(1.5/2.75);
+		return diff*(7.5625*(td)*td + .75) + from;
+	} else if (t < (2.5/2.75)) {
+		float td = t-(2.25/2.75);
+		return diff*(7.5625*(td)*td + .9375) + from;
+	} else {
+		float td=t-(2.625/2.75);
+		return diff*(7.5625*(td)*td + .984375) + from;
+	}
 }
 
 #endif
