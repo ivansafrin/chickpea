@@ -21,6 +21,9 @@ void vec3Sub(float v1[3], float v2[3], float *out);
 float vec2Dist(float v1[2], float v2[2]);
 float vec2Length(float v[2]);
 
+void vecSet3f(float v[3], float x, float y, float z);
+void vecSet2f(float v[3], float x, float y);
+
 #endif
 
 #ifdef CHICKPEA_VECTOR_IMPLEMENTATION
@@ -55,6 +58,17 @@ float vec2Dist(float v1[2], float v2[2]) {
 
 float vec2Length(float v[2]) {
 	return sqrtf(v[0]*v[0]+v[1]*v[1]);
+}
+
+void vecSet3f(float v[3], float x, float y, float z) {
+	v[0] = x;
+	v[1] = y;
+	v[2] = z;
+}
+
+void vecSet2f(float v[3], float x, float y) {
+	v[0] = x;
+	v[1] = y;
 }
 
 #endif
