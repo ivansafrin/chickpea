@@ -44,6 +44,11 @@ typedef struct {
 } PlatformerWorld;
 
 typedef struct {
+	float position[2];
+	uint32_t type;
+} PlatformEntitySave;
+
+typedef struct {
 	float position[3];
 	float scale[3];
 	float size[3];
@@ -66,8 +71,8 @@ typedef struct {
 void updatePlatformerEntity(float elapsed, PlatformerWorld *world, PlatformerEntity *entity, PlatformerEntity *collisionEntities, int numCollisionEntities, const char *solidTiles, int numSolidTiles);
 void initPlatformerEntity(PlatformerEntity *entity);
 void loadTilemapFromFlare(PlatformerWorld *world, const char *fileName);
-void loadTilemap(PlatformerWorld *world, const char *fileName);
-void saveTilemap(PlatformerWorld *world, const char *fileName);
+void loadTilemap(PlatformerWorld *world, const char *fileName, PlatformEntitySave **entities, uint32_t *numEntities);
+void saveTilemap(PlatformerWorld *world, const char *fileName, PlatformEntitySave *entities, uint32_t numEntities);
 void resizeTilemap(PlatformerWorld *world, int sizeX, int sizeY);
 void createEmptyTilemap(PlatformerWorld *world, int sizeX, int sizeY);
 void freeTilemap(PlatformerWorld *world);
@@ -139,7 +144,7 @@ void loadTilemapFromFlare(PlatformerWorld *world, const char *fileName) {
 	}
 }
 
-void loadTilemap(PlatformerWorld *world, const char *fileName) {
+void loadTilemap(PlatformerWorld *world, const char *fileName, PlatformEntitySave **entities, uint32_t *numEntities) {
 	FILE *f = fopen(fileName, "r");
 	fread(&world->worldSizeX, sizeof(uint32_t), 1, f);
 	fread(&world->worldSizeY, sizeof(uint32_t), 1, f);
@@ -147,15 +152,28 @@ void loadTilemap(PlatformerWorld *world, const char *fileName) {
 	for(int i=0; i < world->worldSizeY; i++) {
 		fread(world->worldData[i], 1, world->worldSizeX, f);
 	}
+	*numEntities = 0;
+	fread(numEntities, sizeof(uint32_t), 1, f);
+	if(numEntities) {
+		PlatformEntitySave *ld_entities = malloc(sizeof(PlatformEntitySave)* (*numEntities));
+		fread(ld_entities, sizeof(PlatformEntitySave), *numEntities, f);
+		*entities = ld_entities;
+	} else {
+		*entities = NULL;
+	}
 	fclose(f);
 }
 
-void saveTilemap(PlatformerWorld *world, const char *fileName) {
+void saveTilemap(PlatformerWorld *world, const char *fileName, PlatformEntitySave *entities, uint32_t numEntities) {
 	FILE *f = fopen(fileName, "w");
 	fwrite(&world->worldSizeX, sizeof(uint32_t), 1, f);
 	fwrite(&world->worldSizeY, sizeof(uint32_t), 1, f);
 	for(int i=0; i < world->worldSizeY; i++) {
 		fwrite(world->worldData[i], 1, world->worldSizeX, f);
+	}
+	fwrite(&numEntities, sizeof(uint32_t), 1, f);
+	if(numEntities) {
+		fwrite(entities, sizeof(PlatformEntitySave), numEntities, f);
 	}
 	fclose(f);
 }
