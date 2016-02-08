@@ -13,6 +13,7 @@
 #define chkp_particle_h
 
 #include <chkp_util.h>
+#include <stb_perlin.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -51,7 +52,10 @@ typedef struct {
 } ParticleSystem;
 
 void initParticleSystem(ParticleSystem *system, uint32_t count, float lifetime);
+void particleSystemNoise(float elapsed, ParticleSystem *system, float resolution, float magnitude[3]);
+
 void simulateParticleSystem(float elapsed, ParticleSystem *system);
+void cleanParticleSystem(ParticleSystem *system);
 
 void particleSystemGravity(float elapsed, ParticleSystem *system, float gravity[3]);
 void particleSystemPointGravity(float elapsed, ParticleSystem *system, float gravity[3], float distance, float strength);
@@ -64,6 +68,20 @@ void resetParticleSystem(ParticleSystem *system);
 #endif
 
 #ifdef CHICKPEA_PARTICLE_IMPLEMENTATION
+
+void particleSystemNoise(float elapsed, ParticleSystem *system, float resolution, float magnitude[3]) {
+	for(int i=0; i < system->particleCount; i++) {
+		if(system->particles[i].lifetime >= 0.0) {
+			float relativeLifetime = system->particles[i].lifetime / system->particleLifetime;
+			float nX = stb_perlin_noise3(relativeLifetime * resolution, i, 0.0, 0, 0, 0) * magnitude[0];
+			float nY = stb_perlin_noise3(i, relativeLifetime * resolution, 0.0, 0, 0, 0) * magnitude[1];
+			float nZ = stb_perlin_noise3(0.0, i, relativeLifetime * resolution, 0, 0, 0) * magnitude[2];
+			system->particles[i].velocity[0] += nX * elapsed;
+			system->particles[i].velocity[1] += nY * elapsed;
+			system->particles[i].velocity[2] += nZ * elapsed;
+		}
+	}
+}
 
 void resetParticle(ParticleSystem *system, Particle *particle) {
 	particle->lifetime = fmod(particle->lifetime, system->particleLifetime);;
@@ -102,6 +120,9 @@ void initParticleSystem(ParticleSystem *system, uint32_t count, float lifetime) 
 	system->particleColorEnd[2] = 1.0f;
 	system->particleColorEnd[3] = 1.0f;
 	system->particles = malloc(sizeof(Particle) * count);
+	
+	system->particleSizeStart = 1.0;
+	system->particleSizeEnd = 0.0;
 	
 	resetParticleSystem(system);
 }
@@ -239,19 +260,23 @@ void drawParticleSystem(ParticleSystem *system, uint32_t texture, int positionAt
 	glEnableVertexAttribArray(positionAttribute);
 	glVertexAttribPointer(texCoordAttribute, 2, GL_FLOAT, GL_FALSE, 0, texCoordData);
 	glEnableVertexAttribArray(texCoordAttribute);
-	glVertexAttribPointer(colorAttribute, 4, GL_FLOAT, GL_FALSE, 0, colorData);
-	glEnableVertexAttribArray(colorAttribute);
+//	glVertexAttribPointer(colorAttribute, 4, GL_FLOAT, GL_FALSE, 0, colorData);
+//	glEnableVertexAttribArray(colorAttribute);
 
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glDrawArrays(GL_TRIANGLES, 0, particlesToRender * 6);
 	
 	glDisableVertexAttribArray(positionAttribute);
 	glDisableVertexAttribArray(texCoordAttribute);
-	glDisableVertexAttribArray(colorAttribute);
+//	glDisableVertexAttribArray(colorAttribute);
 	
 	free(vertexData);
 	free(texCoordData);
 	free(colorData);
+}
+
+void cleanParticleSystem(ParticleSystem *system) {
+	free(system->particles);
 }
 
 #endif
