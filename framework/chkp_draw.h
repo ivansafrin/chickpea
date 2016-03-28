@@ -32,8 +32,6 @@ float drawTTFText(TTFFont *font, float x, float y, float scale, int positionAttr
 GLuint loadTexture(const char *image_path, int nearest, int repeat);
 GLuint loadTextureMipMap(const char *image_path, int nearest, int repeat);
 
-GLuint loadShaderFromFile(const char *shaderFile, GLenum type);
-GLuint createProgram(const char *vertexShaderFile, const char *fragmentShaderFile);
 void drawSprite(GLuint spriteTexture, int positionAttribute, int texCoordAttribute, int index, int spriteCountX, int spriteCountY, float size);
 void drawSpriteAnimation(float time, float delay, char loop, const int *frameArray, int animationSize, GLuint spriteTexture, int positionAttribute, int texCoordAttribute, int spriteCountX, int spriteCountY, float size);
 void drawText(int fontTexture, int positionAttribute, int texCoordAttribute, const char *text, float size, float spacing);
@@ -245,56 +243,6 @@ GLuint loadTexture(const char *image_path, int nearest, int repeat) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	}
 	return textureID;
-}
-
-GLuint loadShaderFromFile(const char *shaderFile, GLenum type) {
-	FILE *f = fopen(shaderFile, "rb");
-	if(!f) {
-		printf("Unable to open [%s]\n", shaderFile);
-	}
-	fseek(f, 0, SEEK_END);
-	GLint fsize = (GLint) ftell(f);
-	fseek(f, 0, SEEK_SET);
-	
-	char *contents = malloc(fsize + 1);
-	fread(contents, fsize, 1, f);
-	fclose(f);
-	contents[fsize] = 0;
-	
-	GLuint shaderID = glCreateShader(type);
-	glShaderSource(shaderID, 1, (const char**)&contents, &fsize);
-	glCompileShader(shaderID);
-	
-	GLint compileSuccess;
-	glGetShaderiv(shaderID, GL_COMPILE_STATUS, &compileSuccess);
-	
-	if (compileSuccess == GL_FALSE) {
-		GLchar messages[512];
-		glGetShaderInfoLog(shaderID, sizeof(messages), 0, &messages[0]);
-		printf("%s\n", messages);
-	}
-	
-	free(contents);
-	return shaderID;
-}
-
-GLuint createProgram(const char *vertexShaderFile, const char *fragmentShaderFile) {
-	
-	GLuint vertexShader = loadShaderFromFile(vertexShaderFile, GL_VERTEX_SHADER);
-	GLuint fragmentShader = loadShaderFromFile(fragmentShaderFile, GL_FRAGMENT_SHADER);
-	
-	GLuint programID = glCreateProgram();
-	glAttachShader(programID, vertexShader);
-	glAttachShader(programID, fragmentShader);
-	glLinkProgram(programID);
-	
-	GLint linkSuccess;
-	glGetProgramiv(programID, GL_LINK_STATUS, &linkSuccess);
-	if(linkSuccess == GL_FALSE) {
-		printf("Error linking shader program!\n");
-	}
-	
-	return programID;
 }
 
 void drawTextureAt(int texture, float x, float y, float width, float height, float sOffset, float tOffset, int positionAttribute, int texCoordAttribute) {
