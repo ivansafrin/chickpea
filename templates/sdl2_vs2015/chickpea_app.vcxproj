@@ -28,26 +28,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -71,23 +71,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\⁯ten\Desktop\Workshop\SDL2\include;..\..\framework;C:\Users\⁯ten\Desktop\Workshop\glew\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\⁯ten\Desktop\Workshop\SDL2\lib\x86;C:\Users\⁯ten\Desktop\Workshop\glew\lib\Release\Win32;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\..\framework;C:\glew\include;C:\SDL2\include;..\..\framework\system\sdl2;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\SDL2\lib\x86;C:\glew\lib\Release\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\⁯ten\Desktop\Workshop\SDL2\include;..\..\framework;C:\Users\⁯ten\Desktop\Workshop\glew\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\⁯ten\Desktop\Workshop\SDL2\lib\x64;C:\Users\⁯ten\Desktop\Workshop\glew\lib\Release\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\..\framework;C:\glew\include;C:\SDL2\include;..\..\framework\system\sdl2;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\SDL2\lib\x64;C:\glew\lib\Release\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Users\⁯ten\Desktop\Workshop\SDL2\include;..\..\framework;C:\Users\⁯ten\Desktop\Workshop\glew\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\⁯ten\Desktop\Workshop\SDL2\lib\x86;C:\Users\⁯ten\Desktop\Workshop\glew\lib\Release\Win32;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\..\framework;C:\glew\include;C:\SDL2\include;..\..\framework\system\sdl2;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\SDL2\lib\x86;C:\glew\lib\Release\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Users\⁯ten\Desktop\Workshop\SDL2\include;..\..\framework;C:\Users\⁯ten\Desktop\Workshop\glew\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\⁯ten\Desktop\Workshop\SDL2\lib\x64;C:\Users\⁯ten\Desktop\Workshop\glew\lib\Release\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\..\framework;C:\glew\include;C:\SDL2\include;..\..\framework\system\sdl2;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\SDL2\lib\x64;C:\glew\lib\Release\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

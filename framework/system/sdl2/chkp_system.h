@@ -8,6 +8,11 @@
 // People who worked on this file:
 //	Ivan Safrin
 
+#ifdef _WINDOWS
+#include <GL/glew.h>
+#endif
+
+#include <stdint.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
 
@@ -70,6 +75,11 @@ int systemInit(ChickpeaWindow *window, const char *title, uint32_t xRes, uint32_
 	window->displayWindow = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, xRes, yRes, flags);
 	window->context = SDL_GL_CreateContext(window->displayWindow);
 	SDL_GL_MakeCurrent(window->displayWindow, window->context);
+
+#ifdef _WINDOWS
+	glewInit();
+#endif
+
 	if(highDensity) {
 		glViewport(0, 0, xRes*2.0, yRes*2.0);
 	} else {
