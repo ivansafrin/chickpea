@@ -11,6 +11,15 @@
 #ifndef CHICKPEA_SHADER_H
 #define CHICKPEA_SHADER_H
 
+typedef struct {
+	float viewMatrix[16];
+	float modelMatrix[16];
+	float projectionMatrix[16];
+} MVPMatrices;
+
+void initMVP(MVPMatrices *mvp);
+void setShaderMVP(MVPMatrices *mvp, GLint program, GLint model, GLint view, GLint projection);
+
 GLuint loadShaderFromFile(const char *shaderFile, GLenum type);
 GLuint createProgram(const char *vertexShaderFile, const char *fragmentShaderFile);
 
@@ -55,6 +64,24 @@ int loadShader2DLights(TexturedShader2DLights *shader, const char *vertexProgram
 #endif
 
 #ifdef CHICKPEA_SHADER_IMPLEMENTATION
+
+void initMVP(MVPMatrices *mvp) {
+	float identity[16] = {1.0, 0.0, 0.0, 0.0,
+			      0.0, 1.0, 0.0, 0.0,
+			      0.0, 0.0, 1.0, 0.0,
+			      0.0, 0.0, 0.0, 1.0};
+
+	memcpy(mvp->modelMatrix, identity, sizeof(float) * 16);
+	memcpy(mvp->viewMatrix, identity, sizeof(float) * 16);
+	memcpy(mvp->projectionMatrix, identity, sizeof(float) * 16);
+}
+
+void setShaderMVP(MVPMatrices *mvp, GLint program, GLint model, GLint view, GLint projection) {
+	glUseProgram(program);
+	glUniformMatrix4fv(projection, 1, GL_FALSE, mvp->projectionMatrix);
+	glUniformMatrix4fv(view, 1, GL_FALSE, mvp->viewMatrix);
+	glUniformMatrix4fv(model, 1, GL_FALSE, mvp->modelMatrix);
+}
 
 int loadShaderTextured(TexturedShader *shader, const char *vertexProgram, const char *fragmentProgram) {
 	shader->programID = createProgram(vertexProgram, fragmentProgram);

@@ -8,3 +8,6 @@
 #include <chkp_util.h>
 #define CHICKPEA_SHADER_IMPLEMENTATION
 #include <chkp_shader.h>
+#define CHICKPEA_MESH_IMPLEMENTATION
+#include <chkp_mesh.h>
+
