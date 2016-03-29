@@ -7,7 +7,7 @@
 int main(int argc, char **argv) {
 
 	ChickpeaWindow window;
-	systemInit(&window, "Hello Chickpea", X_RES, Y_RES, 0);	
+	systemInit(&window, "Hello Chickpea", X_RES, Y_RES, 0, 1);	
 
 	TexturedShader shader;
 	loadShaderTextured(&shader, "textured_vertex.glsl", "textured_fragment.glsl");

@@ -26,7 +26,7 @@ typedef struct {
 	SystemEventType type;		
 } SystemEvent;
 
-int systemInit(ChickpeaWindow* window, const char *title, uint32_t xRes, uint32_t yRes, uint8_t fullscreen);
+int systemInit(ChickpeaWindow* window, const char *title, uint32_t xRes, uint32_t yRes, uint8_t fullscreen, uint8_t highDensity);
 void systemShowFrame(ChickpeaWindow* window);
 void systemShutdown();
 uint8_t systemPollEvent(ChickpeaWindow* window, SystemEvent *event);
@@ -58,16 +58,23 @@ uint8_t systemPollEvent(ChickpeaWindow* window, SystemEvent *event) {
 	return 1;
 }
 
-int systemInit(ChickpeaWindow *window, const char *title, uint32_t xRes, uint32_t yRes, uint8_t fullscreen) {
+int systemInit(ChickpeaWindow *window, const char *title, uint32_t xRes, uint32_t yRes, uint8_t fullscreen, uint8_t highDensity) {
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
 	uint32_t flags = SDL_WINDOW_OPENGL;
 	if(fullscreen) {
-		flags |= SDL_WINDOW_FULLSCREEN;
+		flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+	}
+	if(highDensity) {
+		flags |= SDL_WINDOW_ALLOW_HIGHDPI;
 	}
 	window->displayWindow = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, xRes, yRes, flags);
 	window->context = SDL_GL_CreateContext(window->displayWindow);
 	SDL_GL_MakeCurrent(window->displayWindow, window->context);
-	glViewport(0, 0, xRes, yRes);
+	if(highDensity) {
+		glViewport(0, 0, xRes*2.0, yRes*2.0);
+	} else {
+		glViewport(0, 0, xRes, yRes);
+	}
 	return 1;
 }
 
