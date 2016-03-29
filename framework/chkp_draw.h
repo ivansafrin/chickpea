@@ -30,7 +30,7 @@ int loadTTFFontRGBA(const char *fontFile, TTFFont *font, int fontSize, char colo
 float drawTTFText(TTFFont *font, float x, float y, float scale, int positionAttribute, int texCoordAttribute, char *text, int center);
 
 GLuint loadTexture(const char *image_path, int nearest, int repeat);
-GLuint loadTextureMipMap(const char *image_path, int nearest, int repeat);
+GLuint loadTextureMipMap(const char *image_path, int nearest, int repeat, float anisotropy);
 
 void drawSprite(GLuint spriteTexture, int positionAttribute, int texCoordAttribute, int index, int spriteCountX, int spriteCountY, float size);
 void drawSpriteAnimation(float time, float delay, char loop, const int *frameArray, int animationSize, GLuint spriteTexture, int positionAttribute, int texCoordAttribute, int spriteCountX, int spriteCountY, float size);
@@ -179,7 +179,7 @@ int loadTTFFont(const char *fontFile, TTFFont *font, int fontSize) {
 	return 1;
 }
 
-GLuint loadTextureMipMap(const char *image_path, int nearest, int repeat) {
+GLuint loadTextureMipMap(const char *image_path, int nearest, int repeat, float anisotropy) {
 	int x,y,n;
 	stbi_set_flip_vertically_on_load(0);
 	stbi_uc *data = stbi_load(image_path, &x, &y, &n, 4);
@@ -199,6 +199,8 @@ GLuint loadTextureMipMap(const char *image_path, int nearest, int repeat) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	}
+
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
 
 	if(repeat) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

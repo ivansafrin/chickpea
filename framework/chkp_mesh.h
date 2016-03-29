@@ -9,6 +9,7 @@
 //	Ivan Safrin
 
 #include <stdio.h>
+#include <stdint.h>
 
 #ifndef CHICKPEA_MESH_H
 #define CHICKPEA_MESH_H
@@ -30,6 +31,58 @@ void renderMesh(CHKP_Mesh *mesh, int32_t positionAttribute, int32_t texCoordAttr
 #endif
 
 #ifdef CHICKPEA_MESH_IMPLEMENTATION
+
+size_t chckp_getline(char **lineptr, size_t *n, FILE *stream) {
+	char *bufptr = NULL;
+	char *p = bufptr;
+	size_t size;
+	int c;
+
+	if (lineptr == NULL) {
+		return -1;
+	}
+	if (stream == NULL) {
+		return -1;
+	}
+	if (n == NULL) {
+		return -1;
+	}
+	bufptr = *lineptr;
+	size = *n;
+
+	c = fgetc(stream);
+	if (c == EOF) {
+		return -1;
+	}
+	if (bufptr == NULL) {
+		bufptr = malloc(128);
+		if (bufptr == NULL) {
+			return -1;
+		}
+		size = 128;
+	}
+	p = bufptr;
+	while (c != EOF) {
+		if ((p - bufptr) > (size - 1)) {
+			size = size + 128;
+			bufptr = realloc(bufptr, size);
+			if (bufptr == NULL) {
+				return -1;
+			}
+		}
+		*p++ = c;
+		if (c == '\n') {
+			break;
+		}
+		c = fgetc(stream);
+	}
+
+	*p++ = '\0';
+	*lineptr = bufptr;
+	*n = size;
+
+	return p - bufptr - 1;
+}
 
 uint8_t loadMeshOBJ(CHKP_Mesh *mesh, const char *fileName) {
 
@@ -54,7 +107,7 @@ uint8_t loadMeshOBJ(CHKP_Mesh *mesh, const char *fileName) {
 	int *indices = NULL;
 	uint32_t numIndices = 0;
 
-	while (getline(&line, &len, fp) != -1) {
+	while (chckp_getline(&line, &len, fp) != -1) {
 		char * pch;
 		pch = strtok(line," ");
 
