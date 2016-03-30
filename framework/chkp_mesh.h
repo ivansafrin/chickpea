@@ -14,17 +14,23 @@
 #ifndef CHICKPEA_MESH_H
 #define CHICKPEA_MESH_H
 
-
 typedef struct {
 	uint32_t numVertices;
+
 	float *positions;
+	GLuint positionsBuffer;
+
 	float *normals;
+	GLuint normalsBuffer;
+
 	float *texCoords;
+	GLuint texCoordsBuffer;
 
 	uint32_t *indices;
 	uint32_t numIndices;
 } CHKP_Mesh;
 
+void createMeshVBO(CHKP_Mesh *mesh);
 uint8_t loadMeshOBJ(CHKP_Mesh *mesh, const char *fileName);
 void renderMesh(CHKP_Mesh *mesh, int32_t positionAttribute, int32_t texCoordAttribute, int32_t normalAttribute);
 
@@ -262,6 +268,52 @@ uint8_t loadMeshOBJ(CHKP_Mesh *mesh, const char *fileName) {
 		free(line);
 	}
 	return 1;
+}
+
+void createMeshVBO(CHKP_Mesh *mesh) {
+	if(mesh->positions) {
+		glGenBuffers(1, &mesh->positionsBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, mesh->positionsBuffer);
+		glBufferData(GL_ARRAY_BUFFER, mesh->numVertices * 3 * sizeof(float), mesh->positions, GL_STATIC_DRAW);
+	}
+
+	if(mesh->texCoords) {
+		glGenBuffers(1, &mesh->texCoordsBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, mesh->texCoordsBuffer);
+		glBufferData(GL_ARRAY_BUFFER, mesh->numVertices * 2 * sizeof(float), mesh->texCoords, GL_STATIC_DRAW);
+	}
+
+	if(mesh->normals) {
+		glGenBuffers(1, &mesh->normalsBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, mesh->normalsBuffer);
+		glBufferData(GL_ARRAY_BUFFER, mesh->numVertices * 3 * sizeof(float), mesh->normals, GL_STATIC_DRAW);
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void renderMeshVBO(CHKP_Mesh *mesh, int32_t positionAttribute, int32_t texCoordAttribute, int32_t normalAttribute) {
+	if(positionAttribute > -1 && mesh->positions) {
+		glBindBuffer(GL_ARRAY_BUFFER, mesh->positionsBuffer);
+		glVertexAttribPointer(positionAttribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(positionAttribute);
+	}
+
+	if(texCoordAttribute  > -1 && mesh->texCoords) {
+		glBindBuffer(GL_ARRAY_BUFFER, mesh->texCoordsBuffer);
+		glVertexAttribPointer(texCoordAttribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(texCoordAttribute);
+	}
+
+	if(normalAttribute  > -1 && mesh->normals) {
+		glBindBuffer(GL_ARRAY_BUFFER, mesh->normalsBuffer);
+		glVertexAttribPointer(normalAttribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(normalAttribute);
+	}
+
+	glDrawArrays(GL_TRIANGLES, 0, mesh->numVertices);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 }
 
 void renderMesh(CHKP_Mesh *mesh, int32_t positionAttribute, int32_t texCoordAttribute, int32_t normalAttribute) {

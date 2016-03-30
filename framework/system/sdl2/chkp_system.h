@@ -31,7 +31,7 @@ typedef struct {
 	SystemEventType type;		
 } SystemEvent;
 
-int systemInit(ChickpeaWindow* window, const char *title, uint32_t xRes, uint32_t yRes, uint8_t fullscreen, uint8_t highDensity);
+int systemInit(ChickpeaWindow* window, const char *title, uint32_t xRes, uint32_t yRes, uint8_t fullscreen, uint8_t highDensity, uint8_t vSync);
 void systemShowFrame(ChickpeaWindow* window);
 void systemShutdown();
 uint8_t systemPollEvent(ChickpeaWindow* window, SystemEvent *event);
@@ -63,7 +63,7 @@ uint8_t systemPollEvent(ChickpeaWindow* window, SystemEvent *event) {
 	return 1;
 }
 
-int systemInit(ChickpeaWindow *window, const char *title, uint32_t xRes, uint32_t yRes, uint8_t fullscreen, uint8_t highDensity) {
+int systemInit(ChickpeaWindow *window, const char *title, uint32_t xRes, uint32_t yRes, uint8_t fullscreen, uint8_t highDensity, uint8_t vSync) {
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
 	uint32_t flags = SDL_WINDOW_OPENGL;
 	if(fullscreen) {
@@ -75,7 +75,7 @@ int systemInit(ChickpeaWindow *window, const char *title, uint32_t xRes, uint32_
 	window->displayWindow = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, xRes, yRes, flags);
 	window->context = SDL_GL_CreateContext(window->displayWindow);
 	SDL_GL_MakeCurrent(window->displayWindow, window->context);
-
+	SDL_GL_SetSwapInterval(vSync);
 #ifdef _WINDOWS
 	glewInit();
 #endif
