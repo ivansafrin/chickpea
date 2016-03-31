@@ -85,9 +85,16 @@ float drawTTFText(TTFFont *font, float x, float y, float scale, int positionAttr
 	while (*text) {
 		if (*text >= 32) {
 			getSTBTTBakedQuad(font->cdata, font->textureSize,font->textureSize, *text-32, &ax,&ay,&q,1);
-			float newVertices[] = {x+(q.x0*scale) ,y+(q.y0 * scale),x+( q.x1*scale),y+(q.y0 * scale), x+(q.x1*scale),y+(q.y1 * scale), x+(q.x0*scale),y+(q.y0*scale), x+(q.x1*scale),y+(q.y1*scale), x+(q.x0*scale),y+(q.y1*scale)};
+			float newVertices[] = {x+(q.x0*scale) ,y+(q.y0 * scale),
+				x + (q.x1*scale),y + (q.y1 * scale),
+				x+( q.x1*scale),y+(q.y0 * scale), 
+
+				x+(q.x0*scale),y+(q.y0*scale), 
+				x + (q.x0*scale),y + (q.y1*scale),
+				x+(q.x1*scale),y+(q.y1*scale)
+				};
 			memcpy(pVertices, newVertices, sizeof(float) * 12);
-			float newTexCoords[] = {q.s0,q.t0, q.s1,q.t0, q.s1,q.t1, q.s0,q.t0, q.s1,q.t1, q.s0,q.t1};
+			float newTexCoords[] = {q.s0,q.t0, q.s1,q.t1, q.s1,q.t0, q.s0,q.t0, q.s0,q.t1, q.s1,q.t1};
 			memcpy(pTexCoords, newTexCoords, sizeof(float) * 12);
 			
 			textWidth =  q.x1*scale;
