@@ -15,16 +15,15 @@
 #define CHICKPEA_MESH_H
 
 typedef struct {
+	float position[3];
+	float texCoord[2];
+	float normal[3];
+} CHKP_MeshVertex;
+
+typedef struct {
 	uint32_t numVertices;
-
-	float *positions;
-	GLuint positionsBuffer;
-
-	float *normals;
-	GLuint normalsBuffer;
-
-	float *texCoords;
-	GLuint texCoordsBuffer;
+	CHKP_MeshVertex *vertices;
+	GLuint vertexBuffer;
 
 	uint32_t *indices;
 	uint32_t numIndices;
@@ -226,34 +225,26 @@ uint8_t loadMeshOBJ(CHKP_Mesh *mesh, const char *fileName) {
 		}
 	}
 	
-	mesh->positions = malloc(sizeof(float) * numIndices * 9);
-	mesh->texCoords = malloc(sizeof(float) * numIndices * 6);
-	mesh->normals = malloc(sizeof(float) * numIndices * 9);
-
+	mesh->vertices = malloc(sizeof(CHKP_MeshVertex) * 3 * numIndices);
 	mesh->numVertices = numIndices * 3;
 
 	// build final arrays
 	for(int i =0; i < numIndices; i++) {
 		for(int j=0; j < 3; j++) {
 			uint32_t pIndex = (indices[(i*9)+(j*3)])-1;
-			//printf("v: %f,%f,%f\n", positions[(pIndex*3)+0], positions[(pIndex*3)+1], positions[(pIndex*3)+2]);
-
-			mesh->positions[(i*9) + (j*3) + 0] = positions[(pIndex*3)+0];
-			mesh->positions[(i*9) + (j*3) + 1] = positions[(pIndex*3)+1];
-			mesh->positions[(i*9) + (j*3) + 2] = positions[(pIndex*3)+2];
+			mesh->vertices[(i*3)+j].position[0] = positions[(pIndex*3) + 0];
+			mesh->vertices[(i*3)+j].position[1] = positions[(pIndex*3) + 1];
+			mesh->vertices[(i*3)+j].position[2] = positions[(pIndex*3) + 2];
 
 			uint32_t tIndex = (indices[(i*9)+(j*3)+1])-1;
-			//printf("vt: %f,%f\n", texCoords[(tIndex*2)+0], texCoords[(tIndex*2)+1]);
-
-			mesh->texCoords[(i*6) + (j*2) + 0] = texCoords[(tIndex*2)+0];
-			mesh->texCoords[(i*6) + (j*2) + 1] = 1.0-texCoords[(tIndex*2)+1];
+			mesh->vertices[(i * 3) + j].texCoord[0] = texCoords[(tIndex * 2) + 0];
+			mesh->vertices[(i * 3) + j].texCoord[1] = 1.0 - texCoords[(tIndex * 2) + 1]; // need to flip texture instead
 
 			uint32_t nIndex = (indices[(i*9)+(j*3)+2])-1;
-			//printf("vn: %f,%f,%f\n", normals[(nIndex*3)+0], normals[(nIndex*3)+1], normals[(nIndex*3)+2]);
+			mesh->vertices[(i * 3) + j].normal[0] = normals[(nIndex * 3) + 0];
+			mesh->vertices[(i * 3) + j].normal[1] = normals[(nIndex * 3) + 1];
+			mesh->vertices[(i * 3) + j].normal[2] = normals[(nIndex * 3) + 2];
 
-			mesh->normals[(i*9) + (j*3) + 0] = normals[(pIndex*3)+0];
-			mesh->normals[(i*9) + (j*3) + 1] = normals[(pIndex*3)+1];
-			mesh->normals[(i*9) + (j*3) + 2] = normals[(pIndex*3)+2];
 		}
 	}
 
@@ -271,43 +262,29 @@ uint8_t loadMeshOBJ(CHKP_Mesh *mesh, const char *fileName) {
 }
 
 void createMeshVBO(CHKP_Mesh *mesh) {
-	if(mesh->positions) {
-		glGenBuffers(1, &mesh->positionsBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, mesh->positionsBuffer);
-		glBufferData(GL_ARRAY_BUFFER, mesh->numVertices * 3 * sizeof(float), mesh->positions, GL_STATIC_DRAW);
+	if(mesh->vertices) {
+		glGenBuffers(1, &mesh->vertexBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, mesh->vertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, mesh->numVertices * sizeof(CHKP_MeshVertex), mesh->vertices, GL_STATIC_DRAW);
 	}
-
-	if(mesh->texCoords) {
-		glGenBuffers(1, &mesh->texCoordsBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, mesh->texCoordsBuffer);
-		glBufferData(GL_ARRAY_BUFFER, mesh->numVertices * 2 * sizeof(float), mesh->texCoords, GL_STATIC_DRAW);
-	}
-
-	if(mesh->normals) {
-		glGenBuffers(1, &mesh->normalsBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, mesh->normalsBuffer);
-		glBufferData(GL_ARRAY_BUFFER, mesh->numVertices * 3 * sizeof(float), mesh->normals, GL_STATIC_DRAW);
-	}
-
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void renderMeshVBO(CHKP_Mesh *mesh, int32_t positionAttribute, int32_t texCoordAttribute, int32_t normalAttribute) {
-	if(positionAttribute > -1 && mesh->positions) {
-		glBindBuffer(GL_ARRAY_BUFFER, mesh->positionsBuffer);
-		glVertexAttribPointer(positionAttribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, mesh->vertexBuffer);
+	if(positionAttribute > -1) {
+		glVertexAttribPointer(positionAttribute, 3, GL_FLOAT, GL_FALSE, sizeof(CHKP_MeshVertex), (void *)offsetof(CHKP_MeshVertex, position));
 		glEnableVertexAttribArray(positionAttribute);
 	}
 
-	if(texCoordAttribute  > -1 && mesh->texCoords) {
-		glBindBuffer(GL_ARRAY_BUFFER, mesh->texCoordsBuffer);
-		glVertexAttribPointer(texCoordAttribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	if(texCoordAttribute  > -1) {
+		glVertexAttribPointer(texCoordAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(CHKP_MeshVertex), (void *)offsetof(CHKP_MeshVertex, texCoord));
 		glEnableVertexAttribArray(texCoordAttribute);
 	}
 
-	if(normalAttribute  > -1 && mesh->normals) {
-		glBindBuffer(GL_ARRAY_BUFFER, mesh->normalsBuffer);
-		glVertexAttribPointer(normalAttribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	if(normalAttribute  > -1) {
+		glVertexAttribPointer(normalAttribute, 3, GL_FLOAT, GL_FALSE, sizeof(CHKP_MeshVertex), (void *)offsetof(CHKP_MeshVertex, normal));
 		glEnableVertexAttribArray(normalAttribute);
 	}
 
@@ -317,19 +294,18 @@ void renderMeshVBO(CHKP_Mesh *mesh, int32_t positionAttribute, int32_t texCoordA
 }
 
 void renderMesh(CHKP_Mesh *mesh, int32_t positionAttribute, int32_t texCoordAttribute, int32_t normalAttribute) {
-
-	if(positionAttribute > -1 && mesh->positions) {
-		glVertexAttribPointer(positionAttribute, 3, GL_FLOAT, GL_FALSE, 0, mesh->positions);
+	if(positionAttribute > -1) {
+		glVertexAttribPointer(positionAttribute, 3, GL_FLOAT, GL_FALSE, sizeof(CHKP_MeshVertex), (char*)mesh->vertices + offsetof(CHKP_MeshVertex, position));
 		glEnableVertexAttribArray(positionAttribute);
 	}
 
-	if(texCoordAttribute  > -1 && mesh->texCoords) {
-		glVertexAttribPointer(texCoordAttribute, 2, GL_FLOAT, GL_FALSE, 0, mesh->texCoords);
+	if(texCoordAttribute  > -1) {
+		glVertexAttribPointer(texCoordAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(CHKP_MeshVertex), (char*)mesh->vertices + offsetof(CHKP_MeshVertex, texCoord));
 		glEnableVertexAttribArray(texCoordAttribute);
 	}
 
-	if(normalAttribute  > -1 && mesh->normals) {
-		glVertexAttribPointer(normalAttribute, 3, GL_FLOAT, GL_FALSE, 0, mesh->normals);
+	if(normalAttribute  > -1) {
+		glVertexAttribPointer(normalAttribute, 3, GL_FLOAT, GL_FALSE, sizeof(CHKP_MeshVertex), (char*)mesh->vertices + offsetof(CHKP_MeshVertex, position));
 		glEnableVertexAttribArray(normalAttribute);
 	}
 
